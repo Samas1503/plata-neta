@@ -103,6 +103,25 @@ export default async function DashboardPage() {
           </form>
         </div>
       </nav>
+      <nav className="flex gap-1 border-b border-default-200 px-8 py-2 text-sm">
+        {[
+          ["Resumen", "/dashboard"],
+          ["Cobros", "/dashboard/cobros"],
+          ["Pagos", "/dashboard/payouts"],
+          ["Conciliación", "/dashboard/reconciliation"],
+          ["Plan", "/dashboard/plan"],
+          ["Reportes", "/dashboard/reportes"],
+          ["Keys", "/dashboard/keys"],
+        ].map(([label, href]) => (
+          <Link
+            key={href}
+            href={href}
+            className="rounded-lg px-3 py-1.5 text-default-600 transition-colors hover:bg-default-100 hover:text-foreground"
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
 
       <main className="mx-auto max-w-6xl space-y-8 px-8 py-8">
         <div className="flex items-center justify-between">
