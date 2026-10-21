@@ -87,40 +87,48 @@ ciclo de facturación.
 ## Esquema de datos (borrador inicial)
 
 ```
-Tenant ─┬─ User (role)
+Tenant ─┬─ User (role: OWNER | OPERATOR | VIEWER)
+        ├─ ApiKey (prefix sk_test_/sk_live_, keyHash sha256 — nunca en claro)
         ├─ Plan (tier, gmv_threshold, monthly_price)
-        ├─ PspCredential (provider, encrypted_keys)
-        ├─ PaymentIntent (amount_cents, currency, provider, status, idempotency_key)
-        ├─ Payout (payee_ref, amount_cents, provider, status)
-        ├─ LedgerEntry (account, debit/credit, ref_id)
-        ├─ WebhookEvent (provider, payload, signature_valid, processed_at)
+        ├─ PspCredential (provider, encrypted_keys — AES-256-GCM)
+        ├─ PaymentIntent (amount_cents, currency, provider, status, idempotency_key, expires_at)
+        ├─ Payout (payee_ref, amount_cents, provider, status, created_by, approved_by)
+        ├─ LedgerEntry (account, debit/credit, ref_id — net = debit - credit)
+        ├─ WebhookEvent (provider, event_id, payload, signature_valid, processed_at)
+        ├─ AuditLog (action, entity, entity_id, actor userId|apiKeyId)
         └─ SubscriptionCycle (period, gmv_snapshot, tier_applied, invoiced_at)
 ```
+
+Montos: centavos `BigInt`. Respuestas API serializan BigInt→string (`apps/api/src/lib/json.ts`).
 
 ## Variables de entorno (.env.example — borrador)
 
 ```bash
 # App
-DATABASE_URL=
+DATABASE_URL=postgresql://plata:plata@localhost:5433/plata_neta
+REDIS_URL=redis://localhost:6379
 APP_ENV=sandbox                    # sandbox | production
+AUTH_URL=http://localhost:3500
+AUTH_SECRET=                       # openssl rand -base64 32
+ENCRYPTION_KEY=                    # base64 AES-256-GCM (32 bytes)
 
-# Mercado Pago
-MP_ACCESS_TOKEN=
+# API auth + bootstrap
+BOOTSTRAP_SECRET=                  # crea la PRIMERA API key por tenant
+PAYOUT_APPROVAL_THRESHOLD=10000000 # centavos — sobre esto requiere 2 pasos
+INTENT_EXPIRES_MINUTES=60          # TTL de intents PENDING
+
+# Webhooks PSP (HMAC secrets por provider)
 MP_WEBHOOK_SECRET=
-
-# MODO / Ualá / Naranja X
-MODO_API_KEY=
-UALA_API_KEY=
-NARANJAX_API_KEY=
-
-# Ripio
-RIPIO_API_KEY=
-RIPIO_API_SECRET=
+MODO_WEBHOOK_SECRET=
+UALA_WEBHOOK_SECRET=
+NARANJAX_WEBHOOK_SECRET=
 RIPIO_WEBHOOK_SECRET=
 
-# Suscripciones
-BILLING_CRON_SECRET=
+# Mercado Pago (base URL para mock en tests)
+MP_API_BASE_URL=https://api.mercadopago.com
 ```
+
+Nota: Next lee env por app — cada app necesita su `.env.local`.
 
 ## Decisiones técnicas (ADR ligero)
 
@@ -135,16 +143,30 @@ BILLING_CRON_SECRET=
 | 2026-10-20 | Riel Ripio fuera de PSAV bajo reglas: cero disposición (nunca llamar endpoints de movimiento), off-ramp como standing instruction en Ripio, payouts cripto fuera del MVP, encuadre exclusión art. 2° iv + delegación RG 1058 | Aceptado (debate `psp-boundary`) |
 | 2026-10-20 | ORM: Prisma + PostgreSQL (schema v0 pusheado: Tenant, User, Plan, PspCredential, PaymentIntent, Payout, LedgerEntry, WebhookEvent, SubscriptionCycle) | Aceptado (Fase 0) |
 | 2026-10-20 | Auth: Auth.js v5 + credentials (scrypt nativo, JWT, roles por tenant) | Aceptado (Fase 0) |
-| — | Cola de jobs para conciliación/webhooks | Pendiente (BullMQ, Inngest o cron) |
-| — | Env por app: cada app lee `.env.local` propio (Next no lee `.env` del root) | Convención adoptada |
+| 2026-10-21 | Env por app: cada app lee `.env.local` propio | Convención adoptada |
+| 2026-10-21 | Auth de API: **API keys por tenant** (`sk_test_`/`sk_live_`, sha256 hash, secreto mostrado una vez); tenantId siempre deriva de la key, nunca del body | Aceptado (T0) |
+| 2026-10-21 | Cola de jobs: **BullMQ + Redis** (`packages/jobs`, worker dedicado) — webhook.process, intent.expire, payout.execute, reconcile.run, subscription.bill | Aceptado (T0) |
+| 2026-10-21 | Ejecución de payouts: job `payout.execute` (sweep */2min) — ledger Sent + adapter.payout; sandbox simula ejecución; falla → FAILED + reverso a available | Aceptado |
+| 2026-10-21 | Adaptadores Ualá/NX/MODO via factory `createCvuAdapter` — instrucciones con CVU/alias/QR del comercio (no llamadas reales aún); Ripio recepción-only | Aceptado (skeletons) |
 
-## Roadmap
+## Estado de implementación (2026-10-21)
 
-1. **Fase 0** — Scaffold del monorepo, DB, auth, modelo Tenant/User.
-2. **Fase 1** — Ledger + PaymentIntent + adaptador Mercado Pago (sandbox):
-   cobro por transferencia y webhook.
-3. **Fase 2** — Payouts MP + conciliación básica.
-4. **Fase 3** — Ualá y Naranja X (CVU), MODO (QR).
-5. **Fase 4** — Ripio: recepción de stablecoins, off-ramp a ARS.
-6. **Fase 5** — Suscripciones tiered por GMV + facturación.
-7. **Fase 6** — Reportes, exportación contable, hardening y auditoría.
+Implementado y verificado end-to-end (smoke: key→credencial→intent→payout→conciliación→CSV):
+
+- **Fase 0** ✅ — Monorepo, Postgres :5433, Auth.js credentials, Tenant/User.
+- **Fase 1** ✅ — Ledger doble entrada, PaymentIntent idempotente, adapter MP
+  (createIntent/getStatus/x-signature/parseWebhook), credenciales cifradas, webhook.
+- **Fase 2** ✅ — Payouts con aprobación 2 pasos (≠ creador, sobre umbral) + job
+  payout.execute + conciliación intent↔ledger (`/api/v1/reconciliation`).
+- **Fase 3** ✅ skeletons — Ualá/NX/MODO generan instrucciones con datos del comercio;
+  pendiente cablear APIs reales.
+- **Fase 4** ✅ skeleton — Ripio recepción-only (network/asset validados, payout=error).
+- **Fase 5** ✅ — Planes seeded, job subscription.bill (GMV→tier→ciclo idempotente),
+  `/api/v1/subscription/preview`, `/dashboard/plan`. Pendiente: invoicedAt/factura real.
+- **Fase 6** ✅ — reports/summary + export CSV, AuditLog + /dashboard/auditoria,
+  security headers, sanitizeMetadata, rate limiting Redis.
+- **Transversal** — API keys auth en toda la API, webhook dedup por eventId,
+  expiresAt en intents, gestión de equipo (invitar/roles), nav compartida.
+
+Pendiente (externo): docs reales de APIs Ualá/NX/MODO/Ripio, credenciales
+sandbox, webhook público, tests de rutas API/jobs, invoicedAt, gates BCRA/CNV.

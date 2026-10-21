@@ -85,6 +85,7 @@ Además de `DATABASE_URL` y `AUTH_SECRET` (lista completa en `.env.example`):
 | `REDIS_URL` | Cola BullMQ (`redis://localhost:6379`) |
 | `BOOTSTRAP_SECRET` | Crea la **primera** API key por tenant (dev only) |
 | `PAYOUT_APPROVAL_THRESHOLD` | Umbral en centavos para aprobación en dos pasos de payouts (default `10000000`) |
+| `INTENT_EXPIRES_MINUTES` | TTL de intents PENDING → EXPIRED por sweep (default `60`) |
 | `MP_WEBHOOK_SECRET`, `MODO_WEBHOOK_SECRET`, `UALA_WEBHOOK_SECRET`, `NARANJAX_WEBHOOK_SECRET`, `RIPIO_WEBHOOK_SECRET` | Verificación de firma de webhooks, uno por PSP |
 
 ## API keys y auth de la API
@@ -124,7 +125,8 @@ Todos bajo `/api/v1`, auth `Bearer sk_*` salvo webhooks:
 `apps/web` (`:3500`) con nav compartida: `/dashboard` (home),
 `/dashboard/cobros` (+`/nuevo`, +`/[id]`), `/dashboard/payouts`,
 `/dashboard/reconciliation`, `/dashboard/plan`, `/dashboard/reportes`,
-`/dashboard/keys`.
+`/dashboard/keys`, `/dashboard/equipo` (invitar usuarios, roles — solo OWNER),
+`/dashboard/auditoria` (registro de acciones).
 
 ## Estado del proyecto — Fases 0–6 ✅
 
@@ -139,6 +141,13 @@ Todos bajo `/api/v1`, auth `Bearer sk_*` salvo webhooks:
 - [x] **Fase 5**: suscripciones tiered por GMV + facturación de ciclo
       (`subscription.bill`)
 - [x] **Fase 6**: reportes + export CSV + auditoría + API keys
+- [x] **Hardening**: security headers, `sanitizeMetadata`, body limit 64KB,
+      rate limiting Redis, webhook dedup por eventId, serialización BigInt→string
+- [x] **Jobs recurrentes** (BullMQ): `webhook.process`, `intent.expire`,
+      `payout.execute` (sweep */2min — sandbox simula PSP; falla → FAILED +
+      reverso a available), `reconcile.run` */15m, `subscription.bill` 1ro/mes
+- [x] **Equipo**: invitar usuarios OPERATOR/VIEWER, cambio de roles (OWNER,
+      anti auto-cambio); intents con `expiresAt` real
 
 ## Marco legal (resultado de los debates `business-model` y `psp-boundary`)
 
