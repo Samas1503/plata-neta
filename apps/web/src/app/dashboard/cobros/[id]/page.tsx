@@ -34,7 +34,8 @@ export default async function CobroDetallePage({
     orderBy: { createdAt: "asc" },
   });
 
-  const meta = intent.metadata as Record<string, unknown> | null;
+  const raw = intent.metadata;
+  const meta = (typeof raw === "string" ? JSON.parse(raw) : raw) as Record<string, unknown> | null;
   const details = (meta?.["paymentDetails"] ?? {}) as Record<string, unknown>;
 
   return (

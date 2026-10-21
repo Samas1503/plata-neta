@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm db:generate && npx prisma generate --schema packages/db/prisma/schema.demo.prisma && pnpm --filter @plata-neta/web build",
+  "outputDirectory": "apps/web/.next",
+  "env": {
+    "DEMO_SQLITE": "1",
+    "AUTH_TRUST_HOST": "true",
+    "DEMO_DB_PATH": "packages/db/prisma/demo.db",
+    "AUTH_SECRET": "demo-secret-plata-neta-not-for-prod"
+  }
+}
