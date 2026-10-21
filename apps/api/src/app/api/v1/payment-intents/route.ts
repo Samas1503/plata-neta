@@ -11,6 +11,7 @@ import { authenticateApiKey } from "@/lib/apikey";
 import { decryptJson } from "@plata-neta/db";
 import { ensureProvidersRegistered, toCredentials } from "@/lib/providers";
 import { rateLimit, rateLimitKey } from "@/lib/ratelimit";
+import { sanitizeMetadata } from "@/lib/body";
 
 // GET /api/v1/payment-intents — listar intents del tenant autenticado.
 export async function GET(req: NextRequest) {
@@ -76,6 +77,13 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
+  const cleanMeta = sanitizeMetadata(metadata);
+  if (cleanMeta === null) {
+    return json(
+      { error: "metadata must be a flat object (max 20 keys, values ≤500 chars)" },
+      { status: 400 },
+    );
+  }
   if (!isProviderId(provider)) {
     return json({ error: `unknown provider: ${provider}` }, { status: 400 });
   }
@@ -118,7 +126,7 @@ export async function POST(req: NextRequest) {
         amountCents: amount,
         currency,
         idempotencyKey,
-        metadata: (metadata ?? {}) as never,
+        metadata: cleanMeta as never,
         expiresAt: new Date(Date.now() + ttlMin * 60_000),
       },
     });

@@ -12,6 +12,7 @@ const LINKS: [string, string][] = [
   ["Reportes", "/dashboard/reportes"],
   ["Keys", "/dashboard/keys"],
   ["Equipo", "/dashboard/equipo"],
+  ["Auditoría", "/dashboard/auditoria"],
 ];
 
 export function DashboardNav() {
