@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { authenticateApiKey } from "@/lib/apikey";
 import { audit } from "@/lib/audit";
@@ -9,18 +10,18 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const auth = await authenticateApiKey(req);
-  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!auth) return json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const key = await prisma.apiKey.findFirst({
     where: { id, tenantId: auth.tenantId },
   });
-  if (!key) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!key) return json({ error: "not found" }, { status: 404 });
 
   await prisma.apiKey.update({
     where: { id },
     data: { revokedAt: new Date() },
   });
   await audit({ tenantId: auth.tenantId, apiKeyId: auth.keyId, action: "api_key.revoke", entity: "api_key", entityId: id });
-  return NextResponse.json({ revoked: true });
+  return json({ revoked: true });
 }

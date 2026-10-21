@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { authenticateApiKey, generateApiKey } from "@/lib/apikey";
 import { audit } from "@/lib/audit";
@@ -22,13 +23,13 @@ export async function POST(req: NextRequest) {
       process.env.BOOTSTRAP_SECRET &&
       req.headers.get("x-bootstrap-secret") === process.env.BOOTSTRAP_SECRET;
     if (!bootstrapOk || !body.tenantId) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+      return json({ error: "unauthorized" }, { status: 401 });
     }
     const existing = await prisma.apiKey.count({
       where: { tenantId: body.tenantId, revokedAt: null },
     });
     if (existing > 0) {
-      return NextResponse.json(
+      return json(
         { error: "tenant already has keys — authenticate with API key" },
         { status: 403 },
       );
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
 
   await audit({ tenantId, apiKeyId: auth?.keyId, action: "api_key.create", entity: "api_key", entityId: key.id, metadata: { name } });
   // El secreto completo solo aparece en esta respuesta.
-  return NextResponse.json(
+  return json(
     {
       apiKey: `${prefix}${secret}`,
       key: { id: key.id, name, prefix, display },
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
 // GET /api/v1/api-keys — listar metadatos (nunca el secreto).
 export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req);
-  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!auth) return json({ error: "unauthorized" }, { status: 401 });
 
   const keys = await prisma.apiKey.findMany({
     where: { tenantId: auth.tenantId },
@@ -71,5 +72,5 @@ export async function GET(req: NextRequest) {
     },
     orderBy: { createdAt: "desc" },
   });
-  return NextResponse.json({ keys });
+  return json({ keys });
 }

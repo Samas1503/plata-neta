@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { isProviderId } from "@plata-neta/providers";
 import { authenticateApiKey } from "@/lib/apikey";
@@ -12,13 +13,13 @@ import { rateLimit, rateLimitKey } from "@/lib/ratelimit";
 export async function POST(req: NextRequest) {
   const rl = await rateLimit(rateLimitKey(req, "creds"), 10);
   if (!rl.ok) {
-    return NextResponse.json(
+    return json(
       { error: "rate limited" },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
     );
   }
   const auth = await authenticateApiKey(req);
-  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!auth) return json({ error: "unauthorized" }, { status: 401 });
   const tenantId = auth.tenantId;
 
   let body: {
@@ -26,25 +27,26 @@ export async function POST(req: NextRequest) {
     accessToken?: string;
     webhookSecret?: string;
     baseUrl?: string;
+    [key: string]: unknown;
   };
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+    return json({ error: "invalid json" }, { status: 400 });
   }
 
-  const { provider, accessToken, webhookSecret, baseUrl } = body;
+  const { provider, accessToken, webhookSecret, baseUrl, ...extra } = body;
   if (!provider || !accessToken) {
-    return NextResponse.json(
+    return json(
       { error: "required: provider, accessToken" },
       { status: 400 },
     );
   }
   if (!isProviderId(provider)) {
-    return NextResponse.json({ error: `unknown provider: ${provider}` }, { status: 400 });
+    return json({ error: `unknown provider: ${provider}` }, { status: 400 });
   }
 
-  const encryptedKeys = encryptJson({ accessToken, webhookSecret, baseUrl });
+  const encryptedKeys = encryptJson({ accessToken, ...extra, webhookSecret, baseUrl });
 
   const credential = await prisma.pspCredential.upsert({
     where: { tenantId_provider: { tenantId, provider } },
@@ -54,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   await audit({ tenantId, apiKeyId: auth.keyId, action: "credential.upsert", entity: "psp_credential", entityId: credential.id, metadata: { provider } });
   // Nunca devolver material sensible — solo metadatos.
-  return NextResponse.json(
+  return json(
     { credential: { id: credential.id, tenantId, provider } },
     { status: 201 },
   );

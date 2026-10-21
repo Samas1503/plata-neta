@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { authenticateApiKey } from "@/lib/apikey";
 
@@ -7,7 +8,7 @@ import { authenticateApiKey } from "@/lib/apikey";
 // pending→available; FAILED/EXPIRED/REVERSED requiere release.
 export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req);
-  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!auth) return json({ error: "unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
   const from = url.searchParams.get("from")
@@ -66,7 +67,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({
+  return json({
     period: { from, to },
     intentsChecked: intents.length,
     drifts,

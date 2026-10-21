@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { canTransition, entriesForPayoutSent } from "@plata-neta/core";
 import { authenticateApiKey } from "@/lib/apikey";
@@ -11,18 +12,18 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const auth = await authenticateApiKey(req);
-  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!auth) return json({ error: "unauthorized" }, { status: 401 });
 
   const { id } = await params;
   const payout = await prisma.payout.findFirst({
     where: { id, tenantId: auth.tenantId },
   });
-  if (!payout) return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!payout) return json({ error: "not found" }, { status: 404 });
   if (payout.status !== "PENDING") {
-    return NextResponse.json({ error: `cannot approve status ${payout.status}` }, { status: 409 });
+    return json({ error: `cannot approve status ${payout.status}` }, { status: 409 });
   }
   if (payout.approvedById) {
-    return NextResponse.json({ error: "already approved" }, { status: 409 });
+    return json({ error: "already approved" }, { status: 409 });
   }
 
   // Aprobar: marca approvedById con el id de la key aprobadora.
@@ -48,5 +49,5 @@ export async function POST(
   });
 
   await audit({ tenantId: auth.tenantId, apiKeyId: auth.keyId, action: "payout.approve", entity: "payout", entityId: payout.id });
-  return NextResponse.json({ payout: updated });
+  return json({ payout: updated });
 }

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { getProvider, isProviderId } from "@plata-neta/providers";
 import {
@@ -14,7 +15,7 @@ import { rateLimit, rateLimitKey } from "@/lib/ratelimit";
 // GET /api/v1/payment-intents — listar intents del tenant autenticado.
 export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req);
-  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!auth) return json({ error: "unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
   const status = url.searchParams.get("status");
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
     take,
   });
-  return NextResponse.json({ intents });
+  return json({ intents });
 }
 
 // POST /api/v1/payment-intents — crear intent de cobro.
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   const rl = await rateLimit(rateLimitKey(req, "intents"), 60);
   if (!rl.ok) {
-    return NextResponse.json(
+    return json(
       { error: "rate limited" },
       { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
     );
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
 
   const auth = await authenticateApiKey(req);
   if (!auth) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    return json({ error: "unauthorized" }, { status: 401 });
   }
   const tenantId = auth.tenantId;
 
@@ -65,23 +66,23 @@ export async function POST(req: NextRequest) {
   try {
     body = (await req.json()) as CreateBody;
   } catch {
-    return NextResponse.json({ error: "invalid json" }, { status: 400 });
+    return json({ error: "invalid json" }, { status: 400 });
   }
 
   const { provider = "mercadopago", amountCents, currency = "ARS", idempotencyKey, metadata } = body;
   if (!idempotencyKey || amountCents == null) {
-    return NextResponse.json(
+    return json(
       { error: "required: idempotencyKey, amountCents" },
       { status: 400 },
     );
   }
   if (!isProviderId(provider)) {
-    return NextResponse.json({ error: `unknown provider: ${provider}` }, { status: 400 });
+    return json({ error: `unknown provider: ${provider}` }, { status: 400 });
   }
 
   const amount = BigInt(amountCents);
   if (amount <= 0n) {
-    return NextResponse.json({ error: "amountCents must be > 0" }, { status: 400 });
+    return json({ error: "amountCents must be > 0" }, { status: 400 });
   }
 
   // Idempotencia: misma key → mismo intent, nunca duplica.
@@ -89,19 +90,19 @@ export async function POST(req: NextRequest) {
     where: { tenantId_idempotencyKey: { tenantId, idempotencyKey } },
   });
   if (existing) {
-    return NextResponse.json({ intent: existing, duplicated: true });
+    return json({ intent: existing, duplicated: true });
   }
 
   const tenant = await prisma.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) {
-    return NextResponse.json({ error: "tenant not found" }, { status: 404 });
+    return json({ error: "tenant not found" }, { status: 404 });
   }
 
   const credential = await prisma.pspCredential.findUnique({
     where: { tenantId_provider: { tenantId, provider } },
   });
   if (!credential) {
-    return NextResponse.json(
+    return json(
       { error: `tenant has no credentials for ${provider}` },
       { status: 422 },
     );
@@ -148,7 +149,7 @@ export async function POST(req: NextRequest) {
         } as never,
       },
     });
-    return NextResponse.json({ intent: updated }, { status: 201 });
+    return json({ intent: updated }, { status: 201 });
   } catch (err) {
     // Fallo upstream: PENDING -> FAILED (transición válida) + marcar.
     await prisma.paymentIntent.update({
@@ -156,6 +157,6 @@ export async function POST(req: NextRequest) {
       data: { status: "FAILED" },
     });
     const message = err instanceof Error ? err.message : "provider error";
-    return NextResponse.json({ error: message, intentId: intent.id }, { status: 502 });
+    return json({ error: message, intentId: intent.id }, { status: 502 });
   }
 }

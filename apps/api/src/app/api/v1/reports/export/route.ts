@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { authenticateApiKey } from "@/lib/apikey";
 
 // GET /api/v1/reports/export.csv — export contable de intents+payouts+ledger.
 export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req);
-  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!auth) return json({ error: "unauthorized" }, { status: 401 });
 
   const [intents, payouts, entries] = await Promise.all([
     prisma.paymentIntent.findMany({ where: { tenantId: auth.tenantId }, orderBy: { createdAt: "desc" }, take: 5000 }),

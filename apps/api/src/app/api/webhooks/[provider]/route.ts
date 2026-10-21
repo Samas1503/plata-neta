@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { getProvider, isProviderId } from "@plata-neta/providers";
 import { ensureProvidersRegistered } from "@/lib/providers";
@@ -16,7 +17,7 @@ export async function POST(
 
   const { provider } = await params;
   if (!isProviderId(provider)) {
-    return NextResponse.json({ error: "unknown provider" }, { status: 404 });
+    return json({ error: "unknown provider" }, { status: 404 });
   }
 
   const rawBody = await req.text();
@@ -34,7 +35,7 @@ export async function POST(
 
   const signatureValid = adapter?.verifySignature(rawBody, headers) ?? false;
   if (adapter && !signatureValid) {
-    return NextResponse.json({ error: "invalid signature" }, { status: 401 });
+    return json({ error: "invalid signature" }, { status: 401 });
   }
 
   // eventId para dedup (si el parse falla, igual persistimos).
@@ -50,7 +51,7 @@ export async function POST(
       where: { provider, eventId, processedAt: { not: null } },
     });
     if (existing) {
-      return NextResponse.json({ received: true, deduplicated: true, eventId: existing.id });
+      return json({ received: true, deduplicated: true, eventId: existing.id });
     }
   }
 
@@ -67,9 +68,9 @@ export async function POST(
   try {
     const { enqueue, JOBS } = await import("@plata-neta/jobs");
     await enqueue(JOBS.WEBHOOK_PROCESS, { webhookEventId: event.id });
-    return NextResponse.json({ received: true, queued: true, eventId: event.id });
+    return json({ received: true, queued: true, eventId: event.id });
   } catch {
-    return NextResponse.json(
+    return json(
       { received: true, queued: false, eventId: event.id },
       { status: 202 },
     );

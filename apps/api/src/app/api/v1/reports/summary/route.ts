@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { authenticateApiKey } from "@/lib/apikey";
 
 // GET /api/v1/reports/summary?from&to — GMV por provider/moneda + ledger.
 export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req);
-  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!auth) return json({ error: "unauthorized" }, { status: 401 });
 
   const url = new URL(req.url);
   const from = url.searchParams.get("from") ? new Date(url.searchParams.get("from")!) : new Date(Date.now() - 30 * 86400000);
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
     }),
   ]);
 
-  return NextResponse.json({
+  return json({
     period: { from, to },
     gmvByProvider: byProvider.map((r) => ({
       provider: r.provider,

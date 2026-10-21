@@ -3,6 +3,7 @@ import { connection } from "./redis";
 import { JOBS } from "./types";
 import { expireIntents, processWebhook, reconcile } from "./processors";
 import { billSubscription } from "./subscription";
+import { upsertSchedulers } from "./queue";
 
 const worker = new Worker(
   "plata-neta",
@@ -26,4 +27,5 @@ const worker = new Worker(
 worker.on("completed", (job) => console.log(`[jobs] ${job.name} ✓`));
 worker.on("failed", (job, err) => console.error(`[jobs] ${job?.name} ✗`, err.message));
 
-console.log("[jobs] worker up — plata-neta queue");
+await upsertSchedulers();
+console.log("[jobs] worker up — plata-neta queue (schedulers: reconcile */15m, expire */5m, billing 1ro/mes)");

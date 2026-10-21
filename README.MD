@@ -16,6 +16,7 @@ comercio; plata-neta nunca custodia dinero.
 - **Monorepo** pnpm + Turborepo
 - **Next.js + TypeScript** (App Router, strict)
 - **PostgreSQL + Prisma** (montos en centavos `BigInt`, nunca float)
+- **BullMQ + Redis** (cola de jobs: webhooks, expiración, conciliación, billing)
 - **Auth**: Auth.js v5 credentials (scrypt nativo, JWT, roles por tenant)
 
 ## Estructura
@@ -28,11 +29,13 @@ packages/
   db/        # Prisma schema, migraciones, seed
   core/      # Money, máquina de estados TxStatus, errores de dominio
   providers/ # Interfaz PaymentProvider (MP, MODO, Ualá, Naranja X, Ripio)
+  jobs/      # Worker BullMQ: webhook.process, intent.expire, reconcile.run,
+             # subscription.bill (schedulers incluidos)
 ```
 
 ## Requisitos
 
-- Node ≥ 20, pnpm, Docker (para Postgres)
+- Node ≥ 20, pnpm, Docker (Postgres + Redis)
 
 ## Levantar la demo
 
@@ -46,13 +49,15 @@ cp .env.example .env
 cp .env apps/web/.env.local      # cada app lee su propio .env.local
 cp .env apps/api/.env.local
 
-# 3. Base de datos (Postgres en Docker, puerto 5433)
-docker compose up -d db
+# 3. Infra (Postgres :5433 + Redis :6379 en Docker)
+docker compose up -d db redis
 pnpm db:push                     # crea el schema
 pnpm db:seed                     # tenant + usuarios demo
 
 # 4. Levantar todo
-pnpm dev                         # web :3500 · api :3001
+pnpm dev                         # turbo: web :3500 · api :3001 · worker de jobs
+# o el worker por separado:
+pnpm --filter @plata-neta/jobs dev
 ```
 
 Comandos útiles: `pnpm lint` (typecheck), `pnpm test`, `pnpm build`,
@@ -71,15 +76,69 @@ Tenant: **Comercio Demo** (plan starter, KYC verificado)
 > ⚠️ Estas credenciales son exclusivamente del seed local. No existen en
 > producción ni deben reutilizarse ahí.
 
-## Estado del proyecto — Fase 0 ✅
+## Variables de entorno
+
+Además de `DATABASE_URL` y `AUTH_SECRET` (lista completa en `.env.example`):
+
+| Var | Uso |
+|---|---|
+| `REDIS_URL` | Cola BullMQ (`redis://localhost:6379`) |
+| `BOOTSTRAP_SECRET` | Crea la **primera** API key por tenant (dev only) |
+| `PAYOUT_APPROVAL_THRESHOLD` | Umbral en centavos para aprobación en dos pasos de payouts (default `10000000`) |
+| `MP_WEBHOOK_SECRET`, `MODO_WEBHOOK_SECRET`, `UALA_WEBHOOK_SECRET`, `NARANJAX_WEBHOOK_SECRET`, `RIPIO_WEBHOOK_SECRET` | Verificación de firma de webhooks, uno por PSP |
+
+## API keys y auth de la API
+
+La API REST (`:3001`) autentica con `Authorization: Bearer sk_test_...`
+(`sk_live_` en producción). La primera key de cada tenant se crea con el
+bootstrap secret — **solo si el tenant aún no tiene keys**:
+
+```bash
+curl -X POST http://localhost:3001/api/v1/api-keys \
+  -H "x-bootstrap-secret: $BOOTSTRAP_SECRET" \
+  -H "content-type: application/json" \
+  -d '{"tenantId": "<cuid-del-tenant>", "name": "default"}'
+```
+
+`tenantId` = cuid del tenant **Comercio Demo** del seed (se obtiene desde
+el dashboard o con `pnpm db:studio`). La respuesta devuelve el secreto una
+sola vez; las keys siguientes se crean autenticado con una key válida.
+
+## API REST — endpoints
+
+Todos bajo `/api/v1`, auth `Bearer sk_*` salvo webhooks:
+
+| Endpoint | Descripción |
+|---|---|
+| `GET/POST /payment-intents` | Crear y listar intents de cobro |
+| `GET/POST /payouts` · `POST /payouts/:id/approve` | Payouts; aprobación en dos pasos sobre `PAYOUT_APPROVAL_THRESHOLD` |
+| `GET/POST /api-keys` · `DELETE /api-keys/:id` | Gestión de API keys |
+| `GET /reconciliation` | Desajustes entre intents y ledger |
+| `GET /subscription/preview` | Preview del tier/facturación por GMV |
+| `GET /reports/summary` · `GET /reports/export` | Reporte agregado y export CSV |
+| `POST /credentials` | Cargar credenciales PSP del comercio (AES-256-GCM) |
+| `POST /webhooks/:provider` | Webhooks PSP: firma → persistir → procesar async |
+
+## Dashboard
+
+`apps/web` (`:3500`) con nav compartida: `/dashboard` (home),
+`/dashboard/cobros` (+`/nuevo`, +`/[id]`), `/dashboard/payouts`,
+`/dashboard/reconciliation`, `/dashboard/plan`, `/dashboard/reportes`,
+`/dashboard/keys`.
+
+## Estado del proyecto — Fases 0–6 ✅
 
 - [x] Monorepo + DB + auth + modelo Tenant/User
 - [x] Webhook PSP: persiste eventos antes de procesar (`202`/`401`)
 - [x] Money en enteros, máquina de estados, interfaz `PaymentProvider`
-- [ ] **Fase 1**: ledger + adaptador Mercado Pago sandbox (cobro por
+- [x] **Fase 1**: ledger + adaptador Mercado Pago (cobro por
       transferencia + webhook `x-signature`)
-- [ ] Fases 2–6: payouts MP, Ualá/Naranja X/MODO, Ripio, suscripciones,
-      reportes
+- [x] **Fase 2**: payouts MP + conciliación (`reconcile.run`, `/reconciliation`)
+- [x] **Fase 3**: Ualá y Naranja X (CVU) + MODO (adaptadores + webhooks firmados)
+- [x] **Fase 4**: Ripio — recepción de stablecoins (payouts cripto fuera del MVP)
+- [x] **Fase 5**: suscripciones tiered por GMV + facturación de ciclo
+      (`subscription.bill`)
+- [x] **Fase 6**: reportes + export CSV + auditoría + API keys
 
 ## Marco legal (resultado de los debates `business-model` y `psp-boundary`)
 

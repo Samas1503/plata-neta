@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { authenticateApiKey } from "@/lib/apikey";
 
 // GET /api/v1/subscription/preview — GMV actual del ciclo + tier proyectado.
 export async function GET(req: NextRequest) {
   const auth = await authenticateApiKey(req);
-  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!auth) return json({ error: "unauthorized" }, { status: 401 });
 
   const now = new Date();
   const periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -22,7 +23,7 @@ export async function GET(req: NextRequest) {
   const gmvTotal = gmv._sum.amountCents ?? 0n;
   const projected = [...plans].reverse().find((p) => gmvTotal >= p.gmvThreshold) ?? plans[0];
 
-  return NextResponse.json({
+  return json({
     period: periodStart.toISOString().slice(0, 7),
     gmvCents: gmvTotal.toString(),
     projectedTier: projected?.name,
