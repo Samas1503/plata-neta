@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/heroui";
 import { Hero3D } from "@/components/hero3d";
 import { Reveal } from "@/components/reveal";
-import { StatusFlow } from "@/components/statusflow";
+import { PointViz } from "@/components/pointviz";
 
 const BTN_PRIMARY =
   "rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 font-semibold text-white shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/40 hover:brightness-110 active:translate-y-0";
@@ -39,9 +39,8 @@ const SECTIONS = [
     title: "Cobrá por transferencia desde cualquier billetera",
     text: "Generá un intent de cobro y recibí plata por CVU, alias o QR interoperable — Mercado Pago, MODO, Ualá o Naranja X. Confirmación en tiempo real vía webhooks verificados.",
     points: [
-      ["Un solo link de cobro", "El pagador elige su billetera; vos recibís directo en tu cuenta.", ICONS.arrow],
-      ["Estado en vivo", "Pendiente → procesando → acreditado, con máquina de estados auditada.", ICONS.bolt],
-      ["Idempotente", "Reintentos y webhooks duplicados nunca crean cobros de más.", ICONS.shield],
+      ["Un solo link de cobro", "link", ICONS.arrow],
+      ["Idempotente", "idem", ICONS.shield],
     ],
     accent: { text: "text-emerald-600", bg: "bg-emerald-500", soft: "bg-emerald-50", border: "border-emerald-200", glow: "shadow-emerald-200/60" },
   },
@@ -51,9 +50,9 @@ const SECTIONS = [
     title: "Pagá a proveedores sin salir del panel",
     text: "Payouts con aprobación en dos pasos y ledger de doble entrada: cada centavo queda registrado y conciliable contra tus extractos de cada billetera.",
     points: [
-      ["Aprobación en dos pasos", "Un operador propone, un owner confirma — cero errores de fondos.", ICONS.users],
-      ["Ledger contable", "Doble entrada: pending → available, siempre balanceado.", ICONS.layers],
-      ["Conciliación", "Webhook + extracto PSP vs ledger, diferencias a la vista.", ICONS.check],
+      ["Aprobación en dos pasos", "approve", ICONS.users],
+      ["Ledger contable", "ledger", ICONS.layers],
+      ["Conciliación", "recon", ICONS.check],
     ],
     accent: { text: "text-sky-600", bg: "bg-sky-500", soft: "bg-sky-50", border: "border-sky-200", glow: "shadow-sky-200/60" },
   },
@@ -146,18 +145,14 @@ export default function Home() {
               <div className={`relative rounded-3xl border ${s.accent.border} bg-white/70 p-2 shadow-xl ${s.accent.glow} backdrop-blur`}>
                 <div className={`absolute -top-3 left-6 h-6 w-24 rounded-full ${s.accent.bg} opacity-20 blur-md`} />
                 <div className="space-y-2 rounded-2xl bg-white/60 p-6">
-                  {s.points.map(([t, d, icon]) => (
+                  {s.points.map(([t, viz, icon]) => (
                     <div key={t as string} className="group flex gap-4 rounded-xl p-3 transition-colors hover:bg-white">
                       <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${s.accent.soft} ${s.accent.text} transition-transform group-hover:scale-110`}>
                         <Icon d={icon as string} className="h-4.5 w-4.5" />
                       </div>
                       <div className="min-w-0">
                         <h3 className="font-semibold">{t}</h3>
-                        {t === "Estado en vivo" ? (
-                          <StatusFlow />
-                        ) : (
-                          <p className="mt-0.5 text-sm text-default-500">{d}</p>
-                        )}
+<PointViz kind={viz as string} />
                       </div>
                     </div>
                   ))}
