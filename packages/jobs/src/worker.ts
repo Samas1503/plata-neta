@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { connection } from "./redis";
 import { JOBS } from "./types";
-import { expireIntents, processWebhook, reconcile } from "./processors";
+import { executePayouts, expireIntents, processWebhook, reconcile } from "./processors";
 import { billSubscription } from "./subscription";
 import { upsertSchedulers } from "./queue";
 
@@ -17,6 +17,8 @@ const worker = new Worker(
         return reconcile();
       case JOBS.SUBSCRIPTION_BILL:
         return billSubscription(job.data);
+      case JOBS.PAYOUT_EXECUTE:
+        return executePayouts(job.data);
       default:
         throw new Error(`unknown job: ${job.name}`);
     }

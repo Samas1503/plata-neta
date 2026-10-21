@@ -11,6 +11,7 @@ const LINKS: [string, string][] = [
   ["Plan", "/dashboard/plan"],
   ["Reportes", "/dashboard/reportes"],
   ["Keys", "/dashboard/keys"],
+  ["Equipo", "/dashboard/equipo"],
 ];
 
 export function DashboardNav() {

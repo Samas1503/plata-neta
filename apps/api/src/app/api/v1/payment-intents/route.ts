@@ -109,6 +109,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Intent PENDING + asientos ledger en la misma transacción.
+  const ttlMin = Number(process.env.INTENT_EXPIRES_MINUTES ?? "60");
   const intent = await prisma.$transaction(async (tx) => {
     const created = await tx.paymentIntent.create({
       data: {
@@ -118,6 +119,7 @@ export async function POST(req: NextRequest) {
         currency,
         idempotencyKey,
         metadata: (metadata ?? {}) as never,
+        expiresAt: new Date(Date.now() + ttlMin * 60_000),
       },
     });
     for (const e of entriesForCollectionPending(created.id, amount)) {

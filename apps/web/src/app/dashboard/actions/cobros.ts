@@ -36,6 +36,7 @@ export async function createIntent(formData: FormData): Promise<void> {
         currency: "ARS",
         idempotencyKey,
         metadata: description ? { description } : {},
+        expiresAt: new Date(Date.now() + Number(process.env.INTENT_EXPIRES_MINUTES ?? "60") * 60_000),
       },
     });
     for (const e of entriesForCollectionPending(created.id, amountCents)) {

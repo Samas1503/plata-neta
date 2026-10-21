@@ -20,6 +20,7 @@ export async function enqueue(name: JobName, data: JobData["data"], delay = 0) {
 export async function upsertSchedulers() {
   await queue.upsertJobScheduler("reconcile-every-15min", { pattern: "*/15 * * * *" }, { name: "reconcile.run", data: {} });
   await queue.upsertJobScheduler("expire-every-5min", { pattern: "*/5 * * * *" }, { name: "intent.expire", data: {} });
+  await queue.upsertJobScheduler("payout-every-2min", { pattern: "*/2 * * * *" }, { name: "payout.execute", data: {} });
   // Facturación: día 1 de cada mes a las 03:00.
   await queue.upsertJobScheduler("subscription-monthly", { pattern: "0 3 1 * *" }, { name: "subscription.bill", data: {} });
 }

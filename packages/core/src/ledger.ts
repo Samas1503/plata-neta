@@ -66,3 +66,15 @@ export function entriesForPayoutSent(
     { account: "available", debitCents: 0n, creditCents: amountCents, refType: "payout", refId },
   ];
 }
+
+// Payout fallido/revertido: vuelve a available (inversa de Sent).
+export function entriesForPayoutReversed(
+  refId: string,
+  amountCents: bigint,
+): LedgerEntryInput[] {
+  return entriesForPayoutSent(refId, amountCents).map((e) => ({
+    ...e,
+    debitCents: e.creditCents,
+    creditCents: e.debitCents,
+  }));
+}

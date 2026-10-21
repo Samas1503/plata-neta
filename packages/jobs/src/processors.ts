@@ -3,10 +3,11 @@ import {
   canTransition,
   entriesForCollectionReleased,
   entriesForCollectionSucceeded,
+  entriesForPayoutReversed,
   entriesForPayoutSent,
 } from "@plata-neta/core";
 import type { ProviderId } from "@plata-neta/providers";
-import type { WebhookProcessData, IntentExpireData } from "./types";
+import type { WebhookProcessData, IntentExpireData, PayoutExecuteData } from "./types";
 
 async function credentialsFor(tenantId: string, provider: string) {
   const cred = await prisma.pspCredential.findUnique({
@@ -143,4 +144,75 @@ export async function reconcile() {
   return { checked: stale.length, updated };
 }
 
-export { entriesForPayoutSent };
+// payout.execute — sweep de PROCESSING: postea ledger Sent + ejecuta en el PSP.
+// En sandbox (APP_ENV != production) simula la ejecución del PSP.
+export async function executePayouts(data: PayoutExecuteData) {
+  const pending = await prisma.payout.findMany({
+    where: {
+      status: "PROCESSING",
+      externalRef: null,
+      ...(data.payoutId ? { id: data.payoutId } : {}),
+    },
+    take: 50,
+  });
+  const { getProvider } = await import("@plata-neta/providers");
+  const sandbox = process.env.APP_ENV !== "production";
+  let executed = 0;
+
+  for (const payout of pending) {
+    // Sent entries una sola vez (check si ya hay asientos del payout).
+    const hasLedger = await prisma.ledgerEntry.findFirst({
+      where: { refType: "payout", refId: payout.id },
+    });
+    if (!hasLedger) {
+      await prisma.$transaction(async (tx) => {
+        for (const e of entriesForPayoutSent(payout.id, payout.amountCents)) {
+          await tx.ledgerEntry.create({
+            data: {
+              tenantId: payout.tenantId,
+              account: e.account,
+              debitCents: e.debitCents,
+              creditCents: e.creditCents,
+              refType: e.refType,
+              refId: e.refId,
+            },
+          });
+        }
+      });
+    }
+
+    try {
+      const creds = await credentialsFor(payout.tenantId, payout.provider);
+      if (!creds) throw new Error("missing credentials");
+      const result = sandbox
+        ? { externalRef: `sandbox-${payout.id.slice(-12)}` }
+        : await getProvider(payout.provider as ProviderId).payout(
+            { tenantId: payout.tenantId, payeeRef: payout.payeeRef, amountCents: payout.amountCents, currency: payout.currency as never, idempotencyKey: payout.idempotencyKey },
+            creds,
+          );
+      await prisma.payout.update({
+        where: { id: payout.id },
+        data: { status: "SUCCEEDED", externalRef: result.externalRef },
+      });
+      executed++;
+    } catch {
+      // Falló → FAILED + reverso el ledger.
+      await prisma.$transaction(async (tx) => {
+        await tx.payout.update({ where: { id: payout.id }, data: { status: "FAILED" } });
+        for (const e of entriesForPayoutReversed(payout.id, payout.amountCents)) {
+          await tx.ledgerEntry.create({
+            data: {
+              tenantId: payout.tenantId,
+              account: e.account,
+              debitCents: e.debitCents,
+              creditCents: e.creditCents,
+              refType: e.refType,
+              refId: e.refId,
+            },
+          });
+        }
+      });
+    }
+  }
+  return { checked: pending.length, executed, sandbox };
+}
