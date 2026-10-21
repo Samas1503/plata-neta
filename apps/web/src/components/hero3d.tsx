@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-// Escena 3D del hero: monedas y gemas flotando sobre el gradiente.
+// Escena 3D del hero: monedas y gemas con materiales físicos + env map.
 export function Hero3D() {
   const mountRef = useRef<HTMLDivElement>(null);
 
@@ -23,29 +24,52 @@ export function Hero3D() {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(mount.clientWidth, mount.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
     mount.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-    const key = new THREE.DirectionalLight(0xffffff, 1.6);
+    // Environment map para reflejos realistas (RoomEnvironment, sin HDR externo).
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const envMap = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = envMap;
+
+    const key = new THREE.DirectionalLight(0xfff4e0, 2.2);
     key.position.set(4, 6, 8);
     scene.add(key);
-    const fill = new THREE.PointLight(0x34d399, 40);
-    fill.position.set(-6, -3, 4);
-    scene.add(fill);
+    const rim = new THREE.DirectionalLight(0x38bdf8, 1.4);
+    rim.position.set(-5, -2, -4);
+    scene.add(rim);
 
-    // "Moneda": cilindro achatado, metálico, verde esmeralda (plata).
-    const coinGeo = new THREE.CylinderGeometry(1, 1, 0.14, 48);
-    const coinMat = new THREE.MeshStandardMaterial({
-      color: 0x10b981,
-      metalness: 0.85,
-      roughness: 0.25,
+    // Moneda: oro/pesos con bevel — físico, no plástico.
+    const coinGeo = new THREE.CylinderGeometry(1, 1, 0.14, 64);
+    const coinMat = new THREE.MeshPhysicalMaterial({
+      color: 0xf5c542,
+      metalness: 1.0,
+      roughness: 0.18,
+      envMapIntensity: 1.4,
+      clearcoat: 0.6,
+      clearcoatRoughness: 0.3,
     });
+    // Gema: vidrio cristal con transmisión.
     const gemGeo = new THREE.IcosahedronGeometry(0.7, 0);
-    const gemMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      metalness: 0.4,
-      roughness: 0.15,
+    const gemMat = new THREE.MeshPhysicalMaterial({
+      color: 0x7dd3fc,
+      metalness: 0.1,
+      roughness: 0.05,
+      transmission: 0.9,
+      thickness: 1.2,
+      ior: 1.45,
+      envMapIntensity: 1.6,
       flatShading: true,
+    });
+    // Esmeralda mate para contraste.
+    const emeraldMat = new THREE.MeshPhysicalMaterial({
+      color: 0x10b981,
+      metalness: 0.3,
+      roughness: 0.4,
+      envMapIntensity: 0.8,
+      sheen: 0.5,
+      sheenColor: 0x6ee7b7,
     });
 
     const items: THREE.Mesh[] = [];
@@ -54,7 +78,7 @@ export function Hero3D() {
       { g: coinGeo, m: coinMat, p: [3.2, -0.8, -0.5], s: 1.2 },
       { g: coinGeo, m: coinMat, p: [1.8, 2.2, -2], s: 0.6 },
       { g: gemGeo, m: gemMat, p: [-2.2, -1.6, -0.8], s: 0.8 },
-      { g: gemGeo, m: gemMat, p: [3.6, 1.6, -1.4], s: 0.55 },
+      { g: gemGeo, m: emeraldMat, p: [3.6, 1.6, -1.4], s: 0.55 },
       { g: gemGeo, m: gemMat, p: [-4, 0.2, -2.4], s: 0.5 },
     ] as const;
     for (const { g, m, p, s } of seeds) {
@@ -108,6 +132,9 @@ export function Hero3D() {
       gemGeo.dispose();
       coinMat.dispose();
       gemMat.dispose();
+      emeraldMat.dispose();
+      envMap.dispose();
+      pmrem.dispose();
       renderer.dispose();
     };
   }, []);
@@ -115,7 +142,7 @@ export function Hero3D() {
   return (
     <div
       ref={mountRef}
-      className="pointer-events-none absolute inset-0"
+      className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_70%_60%_at_center,black_40%,transparent_100%)]"
       aria-hidden="true"
     />
   );

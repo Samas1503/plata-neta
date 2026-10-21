@@ -65,22 +65,24 @@ export default function Home() {
       <header className="relative mx-auto flex max-w-5xl flex-col items-center px-8 pb-24 pt-20 text-center">
         <Hero3D />
         <Reveal>
-          <p className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
-            Cobros y pagos por transferencia
-          </p>
-          <h1 className="mt-4 text-5xl font-bold leading-tight tracking-tight">
-            Todos tus rieles de pago,
-            <br />
-            en un solo lugar
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-lg text-default-500">
-            Mercado Pago, MODO, Ualá, Naranja X y stablecoins vía Ripio.
-            Suscripción mensual según tu volumen — los fondos van directo
-            a tus cuentas, nunca por las nuestras.
-          </p>
-          <div className="mt-8 flex justify-center gap-3">
-            <Link href="/register"><Button variant="primary" size="lg">Empezar ahora</Button></Link>
-            <Link href="/login"><Button variant="outline" size="lg">Ya tengo cuenta</Button></Link>
+          <div className="rounded-3xl border border-white/30 bg-white/50 px-10 py-10 shadow-xl shadow-emerald-100/40 backdrop-blur-xl">
+            <p className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
+              Cobros y pagos por transferencia
+            </p>
+            <h1 className="mt-4 text-5xl font-bold leading-tight tracking-tight">
+              Todos tus rieles de pago,
+              <br />
+              en un solo lugar
+            </h1>
+            <p className="mx-auto mt-6 max-w-xl text-lg text-default-600">
+              Mercado Pago, MODO, Ualá, Naranja X y stablecoins vía Ripio.
+              Suscripción mensual según tu volumen — los fondos van directo
+              a tus cuentas, nunca por las nuestras.
+            </p>
+            <div className="mt-8 flex justify-center gap-3">
+              <Link href="/register"><Button variant="primary" size="lg">Empezar ahora</Button></Link>
+              <Link href="/login"><Button variant="outline" size="lg">Ya tengo cuenta</Button></Link>
+            </div>
           </div>
         </Reveal>
       </header>
