@@ -8,6 +8,6 @@ export function req(url: string, init?: { method?: string; body?: unknown; auth?
       ...(init?.auth ? { authorization: `Bearer ${init.auth}` } : {}),
       ...(init?.headers ?? {}),
     },
-    body: init?.body ? JSON.stringify(init.body) : undefined,
+    ...(init?.body ? { body: JSON.stringify(init.body) } : {}),
   });
 }

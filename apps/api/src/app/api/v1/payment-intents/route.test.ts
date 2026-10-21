@@ -3,9 +3,9 @@ import { req } from "../../../../__tests__/helpers";
 
 const m = vi.hoisted(() => ({
   auth: vi.fn(),
-  rateLimit: vi.fn(() => ({ ok: true, retryAfter: 0 })),
+  rateLimit: vi.fn((): any => ({ ok: true, retryAfter: 0 })),
   intentFindUnique: vi.fn(),
-  intentFindMany: vi.fn(() => []),
+  intentFindMany: vi.fn((): any => []),
   intentCreate: vi.fn(),
   intentUpdate: vi.fn(),
   ledgerCreate: vi.fn(),
@@ -20,7 +20,7 @@ vi.mock("@/lib/ratelimit", () => ({
 }));
 vi.mock("@plata-neta/db", () => ({
   prisma: {
-    tenant: { findUnique: vi.fn(() => ({ id: "t1", status: "ACTIVE" })) },
+    tenant: { findUnique: vi.fn((): any => ({ id: "t1", status: "ACTIVE" })) },
     paymentIntent: {
       findUnique: m.intentFindUnique,
       findMany: m.intentFindMany,

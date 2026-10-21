@@ -5,8 +5,8 @@ const m = vi.hoisted(() => ({
   eventFindFirst: vi.fn(),
   eventCreate: vi.fn(),
   enqueue: vi.fn(),
-  verifySig: vi.fn(() => true),
-  parseWh: vi.fn(() => ({ eventId: "e1", externalRef: "x" })),
+  verifySig: vi.fn((): any => true),
+  parseWh: vi.fn((): any => ({ eventId: "e1", externalRef: "x" })),
 }));
 
 vi.mock("@/lib/providers", () => ({ ensureProvidersRegistered: vi.fn() }));
