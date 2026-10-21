@@ -1,16 +1,18 @@
 import { redirect } from "next/navigation";
-import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, Input, Label } from "@/components/heroui";
+import Link from "next/link";
+import { Button, Input, Label } from "@/components/heroui";
+import {
+  Panel,
+  PanelHeader,
+  PanelBody,
+  BTN_PRIMARY,
+  ALERT_DANGER,
+  SELECT,
+  PROVIDER_LABEL,
+} from "@/components/ds";
 import { prisma } from "@plata-neta/db";
 import { auth } from "@/auth";
 import { createIntent } from "../../actions/cobros";
-
-const PROVIDER_LABEL: Record<string, string> = {
-  mercadopago: "Mercado Pago",
-  modo: "MODO",
-  uala: "Ualá",
-  naranjax: "Naranja X",
-  ripio: "Ripio",
-};
 
 export default async function NuevoCobroPage({
   searchParams,
@@ -29,35 +31,29 @@ export default async function NuevoCobroPage({
   const providers = credentials.map((c) => c.provider);
 
   return (
-    <main className="mx-auto max-w-lg px-8 py-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Nuevo cobro</CardTitle>
-          <CardDescription>
-            Generá un intent de cobro. Solo aparecen proveedores con credenciales conectadas.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <main className="mx-auto max-w-lg space-y-6 px-8 py-8">
+      <Link href="/dashboard/cobros" className="text-sm font-medium text-emerald-600 hover:underline">
+        ← Cobros
+      </Link>
+      <Panel>
+        <PanelHeader
+          title="Nuevo cobro"
+          description="Generá un intent de cobro. Solo aparecen proveedores con credenciales conectadas."
+        />
+        <PanelBody>
           {providers.length === 0 ? (
-            <p className="text-sm text-default-500">
+            <p className="text-sm text-muted">
               No tenés billeteras conectadas. Cargá credenciales vía API
               (POST /api/v1/credentials) o desde la página de Keys.
             </p>
           ) : (
             <form action={createIntent} className="flex flex-col gap-4">
               {error === "provider" && (
-                <p className="rounded-md bg-danger-50 p-3 text-sm text-danger-700">
-                  Proveedor sin credenciales conectadas.
-                </p>
+                <p className={ALERT_DANGER}>Proveedor sin credenciales conectadas.</p>
               )}
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="provider">Billetera</Label>
-                <select
-                  id="provider"
-                  name="provider"
-                  required
-                  className="rounded-lg border border-default-300 bg-white px-3 py-2 text-sm"
-                >
+                <select id="provider" name="provider" required className={SELECT}>
                   {providers.map((p) => (
                     <option key={p} value={p}>{PROVIDER_LABEL[p] ?? p}</option>
                   ))}
@@ -71,11 +67,11 @@ export default async function NuevoCobroPage({
                 <Label htmlFor="description">Descripción (opcional)</Label>
                 <Input id="description" name="description" placeholder="Venta #1234" />
               </div>
-              <Button type="submit" variant="primary" className="mt-2">Crear cobro</Button>
+              <Button type="submit" className={`${BTN_PRIMARY} mt-2`}>Crear cobro</Button>
             </form>
           )}
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
     </main>
   );
 }

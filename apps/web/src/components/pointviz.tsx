@@ -22,13 +22,13 @@ export function PointViz({ kind }: { kind: string }) {
         <span className="rounded-md bg-emerald-50 px-2 py-1 font-mono text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-200">
           plata.net/c/8fk2
         </span>
-        <div className="relative mx-1.5 h-0.5 w-8 overflow-hidden rounded bg-default-200">
+        <div className="relative mx-1.5 h-0.5 w-8 overflow-hidden rounded bg-default-soft">
           <div
             className="absolute inset-y-0 w-2 rounded bg-emerald-500 transition-transform duration-500"
             style={{ transform: `translateX(${step * 12}px)` }}
           />
         </div>
-        <span className="rounded-md bg-white px-2 py-1 text-[10px] font-semibold text-default-600 ring-1 ring-default-200">
+        <span className="rounded-md bg-white px-2 py-1 text-[10px] font-semibold text-muted ring-1 ring-separator">
           tu cuenta
         </span>
       </div>
@@ -46,11 +46,11 @@ export function PointViz({ kind }: { kind: string }) {
         </div>
         <div
           className={`flex items-center gap-1.5 rounded-md px-2 py-1 ring-1 transition-all duration-500 ${
-            dup ? "bg-danger-50 ring-danger-200 opacity-60" : "bg-amber-50 ring-amber-200"
+            dup ? "bg-danger-soft ring-danger/40 opacity-60" : "bg-amber-50 ring-amber-200"
           }`}
         >
-          <span className={`h-1.5 w-1.5 rounded-full ${dup ? "bg-danger-400" : "bg-amber-400"}`} />
-          <span className={`font-mono text-[10px] ${dup ? "text-danger-600 line-through" : "text-amber-700"}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${dup ? "bg-danger" : "bg-amber-400"}`} />
+          <span className={`font-mono text-[10px] ${dup ? "text-danger line-through" : "text-amber-700"}`}>
             cobro #4821 · dup
           </span>
         </div>
@@ -71,19 +71,19 @@ export function PointViz({ kind }: { kind: string }) {
             <div className="flex flex-col items-center gap-1">
               <div
                 className={`flex h-6 w-6 items-center justify-center rounded-full transition-all duration-500 ${
-                  step > i ? "bg-emerald-300" : step === i + 1 ? `${s.color} scale-110 ring-4 ring-sky-400/30` : "bg-default-200"
+                  step > i ? "bg-emerald-300" : step === i + 1 ? `${s.color} scale-110 ring-4 ring-sky-400/30` : "bg-default-soft"
                 }`}
               >
                 <svg viewBox="0 0 24 24" className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth="3">
                   {step > i || step === 2 && i === 1 ? <path d="M20 6L9 17l-5-5" /> : <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" />}
                 </svg>
               </div>
-              <span className={`text-[10px] font-semibold ${step === i + 1 ? "text-sky-700" : "text-default-400"}`}>
+              <span className={`text-[10px] font-semibold ${step === i + 1 ? "text-sky-700" : "text-muted"}`}>
                 {s.label}
               </span>
             </div>
             {i === 0 && (
-              <div className="relative mx-1.5 mb-4 h-0.5 w-8 overflow-hidden rounded bg-default-200">
+              <div className="relative mx-1.5 mb-4 h-0.5 w-8 overflow-hidden rounded bg-default-soft">
                 <div className={`absolute inset-y-0 left-0 bg-sky-400 transition-all duration-700 ${step === 2 ? "w-full" : "w-0"}`} />
               </div>
             )}
@@ -121,12 +121,12 @@ export function PointViz({ kind }: { kind: string }) {
             <div
               key={r}
               className={`h-1.5 rounded transition-colors duration-500 ${
-                step === r + 1 ? "bg-emerald-400" : "bg-default-200"
+                step === r + 1 ? "bg-emerald-400" : "bg-default-soft"
               }`}
               style={{ width: `${r === 0 ? 100 : 70}%` }}
             />
           ))}
-          <span className="block text-center text-[9px] font-bold text-default-400">{src}</span>
+          <span className="block text-center text-[9px] font-bold text-muted">{src}</span>
         </div>
       ))}
       <span className={`text-[10px] font-bold transition-all duration-500 ${step === 2 ? "text-emerald-600 opacity-100" : "opacity-30"}`}>

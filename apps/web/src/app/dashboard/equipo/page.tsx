@@ -1,14 +1,22 @@
 import { redirect } from "next/navigation";
-import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, Input, Label } from "@/components/heroui";
+import { Button, Input, Label } from "@/components/heroui";
+import {
+  Badge,
+  Panel,
+  PanelHeader,
+  PanelBody,
+  PageHeader,
+  BTN_PRIMARY,
+  BTN_OUTLINE,
+  ALERT_DANGER,
+  SELECT,
+  TABLE_HEAD,
+  TABLE_ROW,
+  ROLE_BADGE,
+} from "@/components/ds";
 import { prisma } from "@plata-neta/db";
 import { auth } from "@/auth";
 import { inviteUser, changeRole } from "../actions/equipo";
-
-const ROLE_STYLE: Record<string, string> = {
-  OWNER: "bg-accent-100 text-accent-700",
-  OPERATOR: "bg-success-100 text-success-700",
-  VIEWER: "bg-default-100 text-default-600",
-};
 
 export default async function EquipoPage({
   searchParams,
@@ -27,15 +35,13 @@ export default async function EquipoPage({
 
   return (
     <main className="mx-auto max-w-4xl space-y-8 px-8 py-8">
-      <div>
-        <h1 className="text-2xl font-bold">Equipo</h1>
-        <p className="text-sm text-default-500">
-          Usuarios del tenant. Solo OWNER puede invitar o cambiar roles.
-        </p>
-      </div>
+      <PageHeader
+        title="Equipo"
+        description="Usuarios del tenant. Solo OWNER puede invitar o cambiar roles."
+      />
 
       {error && (
-        <p className="rounded-md bg-danger-50 p-3 text-sm text-danger-700">
+        <p className={ALERT_DANGER}>
           {error === "exists" ? "Ya existe un usuario con ese email."
             : error === "self" ? "No podés cambiar tu propio rol."
             : "Datos inválidos (password mín. 8 chars)."}
@@ -43,43 +49,43 @@ export default async function EquipoPage({
       )}
 
       {isOwner && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Invitar usuario</CardTitle>
-            <CardDescription>OPERATOR opera cobros/pagos; VIEWER solo lectura.</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <Panel>
+          <PanelHeader
+            title="Invitar usuario"
+            description="OPERATOR opera cobros/pagos; VIEWER solo lectura."
+          />
+          <PanelBody>
             <form action={inviteUser} className="grid gap-4 sm:grid-cols-4">
-              <div>
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" name="email" type="email" required />
               </div>
-              <div>
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="name">Nombre</Label>
                 <Input id="name" name="name" />
               </div>
-              <div>
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" name="password" type="password" required minLength={8} />
               </div>
               <div className="flex items-end gap-2">
-                <select name="role" className="rounded-lg border border-default-300 px-2 py-2 text-sm">
+                <select name="role" className={SELECT}>
                   <option value="OPERATOR">OPERATOR</option>
                   <option value="VIEWER">VIEWER</option>
                 </select>
-                <Button type="submit" variant="primary" size="sm">Invitar</Button>
+                <Button type="submit" size="sm" className={BTN_PRIMARY}>Invitar</Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
+          </PanelBody>
+        </Panel>
       )}
 
-      <Card>
-        <CardHeader><CardTitle>Miembros</CardTitle></CardHeader>
-        <CardContent>
+      <Panel>
+        <PanelHeader title="Miembros" />
+        <PanelBody>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b text-left text-default-500">
+              <tr className={TABLE_HEAD}>
                 <th className="pb-2 font-medium">Email</th>
                 <th className="pb-2 font-medium">Nombre</th>
                 <th className="pb-2 font-medium">Rol</th>
@@ -88,22 +94,22 @@ export default async function EquipoPage({
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-b last:border-0">
+                <tr key={u.id} className={TABLE_ROW}>
                   <td className="py-2.5">{u.email}</td>
-                  <td className="py-2.5 text-default-500">{u.name ?? "—"}</td>
+                  <td className="py-2.5 text-muted">{u.name ?? "—"}</td>
                   <td className="py-2.5">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${ROLE_STYLE[u.role]}`}>{u.role}</span>
+                    <Badge tone={ROLE_BADGE[u.role] ?? ""}>{u.role}</Badge>
                   </td>
                   {isOwner && (
                     <td className="py-2.5 text-right">
                       {u.id !== session.user.id && (
                         <form action={changeRole.bind(null, u.id)} className="inline-flex gap-1">
-                          <select name="role" defaultValue={u.role} className="rounded-lg border border-default-300 px-2 py-1 text-xs">
+                          <select name="role" defaultValue={u.role} className={`${SELECT} px-2 py-1 text-xs`}>
                             <option value="OWNER">OWNER</option>
                             <option value="OPERATOR">OPERATOR</option>
                             <option value="VIEWER">VIEWER</option>
                           </select>
-                          <Button type="submit" variant="outline" size="sm">Cambiar</Button>
+                          <Button type="submit" size="sm" className={`${BTN_OUTLINE} px-4`}>Cambiar</Button>
                         </form>
                       )}
                     </td>
@@ -112,8 +118,8 @@ export default async function EquipoPage({
               ))}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
     </main>
   );
 }

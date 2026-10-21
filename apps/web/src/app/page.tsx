@@ -80,16 +80,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50/60 via-background to-background text-foreground">
       {/* Nav */}
-      <nav className="sticky top-0 z-10 flex items-center justify-between border-b border-default-200/60 bg-background/80 px-8 py-4 backdrop-blur">
+      <nav className="sticky top-0 z-10 flex items-center justify-between border-b border-separator/60 bg-background/80 px-8 py-4 backdrop-blur">
         <span className="text-lg font-bold tracking-tight">
           plata<span className="text-emerald-600">-neta</span>
         </span>
-        <div className="hidden items-center gap-6 text-sm text-default-500 md:flex">
+        <div className="hidden items-center gap-6 text-sm text-muted md:flex">
           <a href="#features" className="transition-colors hover:text-foreground">Funciones</a>
           <a href="#premium" className="transition-colors hover:text-foreground">Completo</a>
         </div>
         <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm font-medium text-default-600 transition-colors hover:text-emerald-700">
+          <Link href="/login" className="text-sm font-medium text-muted transition-colors hover:text-emerald-700">
             Ingresar
           </Link>
           <Link href="/register"><Button className={BTN_PRIMARY} size="sm">Crear cuenta</Button></Link>
@@ -110,7 +110,7 @@ export default function Home() {
                 en un solo lugar
               </span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-default-600">
+            <p className="mt-6 max-w-xl text-lg text-muted">
               Mercado Pago, MODO, Ualá, Naranja X y stablecoins vía Ripio.
               Suscripción mensual según tu volumen — los fondos van directo
               a tus cuentas, nunca por las nuestras.
@@ -139,7 +139,7 @@ export default function Home() {
                 {s.kicker}
               </div>
               <h2 className="mt-4 text-3xl font-bold tracking-tight md:text-4xl">{s.title}</h2>
-              <p className="mt-4 leading-relaxed text-default-500">{s.text}</p>
+              <p className="mt-4 leading-relaxed text-muted">{s.text}</p>
               <Link href="/register" className={`mt-6 inline-flex items-center gap-1.5 font-semibold ${s.accent.text} transition-all hover:gap-3`}>
                 Empezar <Icon d={ICONS.arrow} className="h-4 w-4" />
               </Link>
@@ -183,7 +183,7 @@ export default function Home() {
                 plata-neta
               </span>
             </h2>
-            <p className="mx-auto mt-3 max-w-lg text-default-500">
+            <p className="mx-auto mt-3 max-w-lg text-muted">
               Una suscripción mensual por tier de volumen. Sin comisión por transacción.
             </p>
           </Reveal>
@@ -197,7 +197,7 @@ export default function Home() {
                       <Icon d={icon} className="h-5 w-5" />
                     </div>
                     <h3 className="mt-4 font-semibold">{t}</h3>
-                    <p className="mt-1.5 text-sm leading-relaxed text-default-500">{d}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted">{d}</p>
                   </div>
                 </div>
               </Reveal>
@@ -211,7 +211,7 @@ export default function Home() {
             <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
               Preguntas frecuentes
             </h2>
-            <p className="mx-auto mt-3 max-w-lg text-default-500">
+            <p className="mx-auto mt-3 max-w-lg text-muted">
               Todo lo que necesitás saber antes de empezar.
             </p>
           </Reveal>
@@ -221,10 +221,10 @@ export default function Home() {
         </section>
 
         {/* Testimonios */}
-        <section className="space-y-8 border-t border-default-200 pt-16 text-center">
+        <section className="space-y-8 border-t border-separator pt-16 text-center">
           {QUOTES.map((q, i) => (
             <Reveal key={q} delay={i * 100}>
-              <blockquote className="mx-auto max-w-2xl text-xl font-medium text-default-600">
+              <blockquote className="mx-auto max-w-2xl text-xl font-medium text-muted">
                 “{q}”
               </blockquote>
             </Reveal>
@@ -237,7 +237,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="border-t border-default-200 px-8 py-8 text-center text-sm text-default-500">
+      <footer className="border-t border-separator px-8 py-8 text-center text-sm text-muted">
         plata-neta · cobros y pagos por transferencia · Argentina 🇦🇷
       </footer>
     </div>

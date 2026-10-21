@@ -28,7 +28,7 @@ export function StatusFlow() {
                   ? `${step.color} scale-110 shadow-md ring-4 ${step.ring}`
                   : i < active
                     ? "bg-emerald-200"
-                    : "bg-default-200"
+                    : "bg-default-soft"
               }`}
             >
               {i === active && (
@@ -42,14 +42,14 @@ export function StatusFlow() {
             </div>
             <span
               className={`text-[10px] font-semibold tracking-wide transition-colors duration-500 ${
-                i === active ? step.text : "text-default-400"
+                i === active ? step.text : "text-muted"
               }`}
             >
               {step.key}
             </span>
           </div>
           {i < STEPS.length - 1 && (
-            <div className="relative mx-1 mb-4 h-0.5 w-10 overflow-hidden rounded bg-default-200">
+            <div className="relative mx-1 mb-4 h-0.5 w-10 overflow-hidden rounded bg-default-soft">
               <div
                 className={`absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-700 ${
                   i < active ? "w-full" : "w-0"

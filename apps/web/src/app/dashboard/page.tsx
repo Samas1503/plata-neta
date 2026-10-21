@@ -1,42 +1,31 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/heroui";
+import { Button } from "@/components/heroui";
+import {
+  Badge,
+  Panel,
+  PanelHeader,
+  PanelBody,
+  PageHeader,
+  BTN_PRIMARY,
+  BTN_OUTLINE,
+  PANEL_SOFT,
+  TABLE_HEAD,
+  TABLE_ROW,
+  TX_BADGE,
+  TX_LABEL,
+  PROVIDER_LABEL,
+  formatARS,
+} from "@/components/ds";
 import { prisma } from "@plata-neta/db";
 import { auth } from "@/auth";
 
-const STATUS_STYLE: Record<string, string> = {
-  SUCCEEDED: "bg-success-100 text-success-700",
-  PENDING: "bg-warning-100 text-warning-700",
-  PROCESSING: "bg-accent-100 text-accent-700",
-  FAILED: "bg-danger-100 text-danger-700",
-  REVERSED: "bg-danger-100 text-danger-700",
-  EXPIRED: "bg-default-100 text-default-600",
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: "Pendiente",
-  PROCESSING: "Procesando",
-  SUCCEEDED: "Acreditado",
-  FAILED: "Fallido",
-  REVERSED: "Revertido",
-  EXPIRED: "Expirado",
-};
-
-const PROVIDER_LABEL: Record<string, string> = {
-  mercadopago: "Mercado Pago",
-  modo: "MODO",
-  uala: "Ualá",
-  naranjax: "Naranja X",
-  ripio: "Ripio",
-};
-
-function formatARS(cents: bigint): string {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(Number(cents) / 100);
-}
+const MODULES = [
+  { title: "Cobros", desc: "Intents de cobro por transferencia y QR", href: "/dashboard/cobros" },
+  { title: "Pagos", desc: "Payouts con aprobación en dos pasos", href: "/dashboard/payouts" },
+  { title: "Conciliación", desc: "Extractos PSP vs ledger interno", href: "/dashboard/reconciliation" },
+  { title: "Credenciales", desc: "Conectá MP, MODO, Ualá, NX y Ripio", href: "/dashboard/keys" },
+];
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -85,49 +74,45 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-6xl space-y-8 px-8 py-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Resumen</h1>
-          <p className="text-sm text-default-500">
-            KYC: {tenant.kycStatus} · Rol: {session.user.role}
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="primary" size="sm">
-            + Nuevo cobro
-          </Button>
-          <Button variant="outline" size="sm">
-            + Nuevo pago
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        title="Resumen"
+        description={`KYC: ${tenant.kycStatus} · Rol: ${session.user.role}`}
+        actions={
+          <>
+            <Link href="/dashboard/cobros/nuevo">
+              <Button size="sm" className={BTN_PRIMARY}>+ Nuevo cobro</Button>
+            </Link>
+            <Link href="/dashboard/payouts">
+              <Button size="sm" className={BTN_OUTLINE}>+ Nuevo pago</Button>
+            </Link>
+          </>
+        }
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <Card key={kpi.label}>
-            <CardHeader>
-              <CardDescription>{kpi.label}</CardDescription>
-              <CardTitle className="text-2xl">{kpi.value}</CardTitle>
-            </CardHeader>
-          </Card>
+          <div key={kpi.label} className={`${PANEL_SOFT} px-6 py-5`}>
+            <p className="text-sm text-muted">{kpi.label}</p>
+            <p className="mt-1 text-2xl font-bold tracking-tight">{kpi.value}</p>
+          </div>
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Actividad reciente</CardTitle>
-          <CardDescription>Últimos cobros de tu comercio</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Panel>
+        <PanelHeader
+          title="Actividad reciente"
+          description="Últimos cobros de tu comercio"
+        />
+        <PanelBody>
           {intents.length === 0 ? (
-            <p className="py-8 text-center text-sm text-default-500">
+            <p className="py-8 text-center text-sm text-muted">
               Todavía no hay cobros. Cuando conectes tus credenciales de PSP y
               generes tu primer intent de cobro, va a aparecer acá.
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-default-200 text-left text-default-500">
+                <tr className={TABLE_HEAD}>
                   <th className="pb-2 font-medium">Fecha</th>
                   <th className="pb-2 font-medium">Proveedor</th>
                   <th className="pb-2 font-medium">Monto</th>
@@ -136,7 +121,7 @@ export default async function DashboardPage() {
               </thead>
               <tbody>
                 {intents.map((intent) => (
-                  <tr key={intent.id} className="border-b border-default-100 last:border-0">
+                  <tr key={intent.id} className={TABLE_ROW}>
                     <td className="py-3">
                       {intent.createdAt.toLocaleDateString("es-AR")}
                     </td>
@@ -147,36 +132,31 @@ export default async function DashboardPage() {
                       {formatARS(intent.amountCents)}
                     </td>
                     <td className="py-3">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_STYLE[intent.status] ?? ""}`}
-                      >
-                        {STATUS_LABEL[intent.status] ?? intent.status}
-                      </span>
+                      <Badge tone={TX_BADGE[intent.status] ?? ""}>
+                        {TX_LABEL[intent.status] ?? intent.status}
+                      </Badge>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { title: "Cobros", desc: "Intents de cobro por transferencia y QR" },
-          { title: "Pagos", desc: "Payouts con aprobación en dos pasos" },
-          { title: "Conciliación", desc: "Extractos PSP vs ledger interno" },
-          { title: "Credenciales", desc: "Conectá MP, MODO, Ualá, NX y Ripio" },
-        ].map((m) => (
-          <Card key={m.title}>
-            <CardHeader>
-              <CardTitle className="text-base">{m.title}</CardTitle>
-              <CardDescription>{m.desc}</CardDescription>
-            </CardHeader>
-            <CardFooter>
-              <Link href="/dashboard"><Button variant="ghost" size="sm">Próximamente</Button></Link>
-            </CardFooter>
-          </Card>
+        {MODULES.map((m) => (
+          <Link key={m.title} href={m.href} className="group">
+            <div
+              className={`${PANEL_SOFT} h-full px-6 py-5 transition-all group-hover:-translate-y-1 group-hover:border-emerald-300 group-hover:shadow-xl group-hover:shadow-emerald-200/50`}
+            >
+              <h3 className="font-semibold tracking-tight">{m.title}</h3>
+              <p className="mt-1 text-sm text-muted">{m.desc}</p>
+              <p className="mt-3 text-sm font-semibold text-emerald-600 transition-all group-hover:translate-x-0.5">
+                Abrir →
+              </p>
+            </div>
+          </Link>
         ))}
       </div>
     </main>

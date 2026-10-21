@@ -1,13 +1,19 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/heroui";
+import {
+  Badge,
+  Panel,
+  PanelHeader,
+  PanelBody,
+  TABLE_HEAD,
+  TABLE_ROW,
+  TX_BADGE,
+  TX_LABEL,
+  PROVIDER_LABEL,
+  formatARS,
+} from "@/components/ds";
 import { prisma } from "@plata-neta/db";
 import { auth } from "@/auth";
-
-const STATUS_LABEL: Record<string, string> = {
-  PENDING: "Pendiente", PROCESSING: "Procesando", SUCCEEDED: "Acreditado",
-  FAILED: "Fallido", REVERSED: "Revertido", EXPIRED: "Expirado",
-};
 
 export default async function CobroDetallePage({
   params,
@@ -33,55 +39,58 @@ export default async function CobroDetallePage({
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 px-8 py-8">
-      <Link href="/dashboard/cobros" className="text-sm text-accent hover:underline">← Cobros</Link>
+      <div className="flex items-center justify-between">
+        <Link href="/dashboard/cobros" className="text-sm font-medium text-emerald-600 hover:underline">
+          ← Cobros
+        </Link>
+        <Badge tone={TX_BADGE[intent.status] ?? ""}>
+          {TX_LABEL[intent.status] ?? intent.status}
+        </Badge>
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Cobro · {STATUS_LABEL[intent.status]}</CardTitle>
-          <CardDescription>{intent.provider} · {intent.createdAt.toLocaleString("es-AR")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex justify-between border-b pb-3">
-            <span className="text-default-500">Monto</span>
-            <span className="text-xl font-bold">
-              {new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(Number(intent.amountCents) / 100)}
-            </span>
+      <Panel>
+        <PanelHeader
+          title="Detalle del cobro"
+          description={`${PROVIDER_LABEL[intent.provider] ?? intent.provider} · ${intent.createdAt.toLocaleString("es-AR")}`}
+        />
+        <PanelBody className="space-y-4">
+          <div className="flex justify-between border-b border-separator/60 pb-3">
+            <span className="text-muted">Monto</span>
+            <span className="text-xl font-bold tracking-tight">{formatARS(intent.amountCents)}</span>
           </div>
           {intent.externalRef && (
-            <div className="flex justify-between border-b pb-3">
-              <span className="text-default-500">Ref externa</span>
+            <div className="flex justify-between border-b border-separator/60 pb-3">
+              <span className="text-muted">Ref externa</span>
               <span className="font-mono text-sm">{intent.externalRef}</span>
             </div>
           )}
           {typeof details["qrCode"] === "string" && (
-            <div className="rounded-lg bg-default-50 p-4">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
               <p className="mb-2 text-sm font-medium">QR de pago</p>
               <code className="break-all text-xs">{details["qrCode"] as string}</code>
             </div>
           )}
           {typeof details["ticketUrl"] === "string" && (
-            <a href={details["ticketUrl"] as string} target="_blank" rel="noreferrer" className="text-accent text-sm hover:underline">
+            <a href={details["ticketUrl"] as string} target="_blank" rel="noreferrer" className="text-sm font-semibold text-emerald-600 hover:underline">
               Ver link de pago →
             </a>
           )}
           <div className="flex justify-between text-sm">
-            <span className="text-default-500">Idempotency key</span>
+            <span className="text-muted">Idempotency key</span>
             <span className="font-mono text-xs">{intent.idempotencyKey.slice(0, 24)}…</span>
           </div>
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Asientos del ledger</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Panel>
+        <PanelHeader title="Asientos del ledger" />
+        <PanelBody>
           {entries.length === 0 ? (
-            <p className="text-sm text-default-400">Sin asientos.</p>
+            <p className="text-sm text-muted">Sin asientos.</p>
           ) : (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-default-500">
+                <tr className={TABLE_HEAD}>
                   <th className="pb-2 font-medium">Cuenta</th>
                   <th className="pb-2 font-medium">Débito</th>
                   <th className="pb-2 font-medium">Crédito</th>
@@ -90,18 +99,18 @@ export default async function CobroDetallePage({
               </thead>
               <tbody>
                 {entries.map((e) => (
-                  <tr key={e.id} className="border-b last:border-0">
+                  <tr key={e.id} className={TABLE_ROW}>
                     <td className="py-2">{e.account}</td>
                     <td className="py-2 font-mono text-xs">{e.debitCents > 0n ? `+${e.debitCents}` : "—"}</td>
                     <td className="py-2 font-mono text-xs">{e.creditCents > 0n ? `-${e.creditCents}` : "—"}</td>
-                    <td className="py-2 text-default-500">{e.createdAt.toLocaleDateString("es-AR")}</td>
+                    <td className="py-2 text-muted">{e.createdAt.toLocaleDateString("es-AR")}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
     </main>
   );
 }

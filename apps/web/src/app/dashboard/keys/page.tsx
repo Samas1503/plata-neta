@@ -1,16 +1,21 @@
 import { redirect } from "next/navigation";
-import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, Input, Label } from "@/components/heroui";
+import { Button, Input, Label } from "@/components/heroui";
+import {
+  Badge,
+  Panel,
+  PanelHeader,
+  PanelBody,
+  PageHeader,
+  BTN_PRIMARY,
+  TABLE_HEAD,
+  TABLE_ROW,
+  PROVIDER_LABEL,
+} from "@/components/ds";
 import { prisma } from "@plata-neta/db";
 import { auth } from "@/auth";
 import { createApiKey, revokeApiKey } from "../actions/keys";
 
-const PROVIDERS = [
-  { id: "mercadopago", label: "Mercado Pago" },
-  { id: "modo", label: "MODO" },
-  { id: "uala", label: "Ualá" },
-  { id: "naranjax", label: "Naranja X" },
-  { id: "ripio", label: "Ripio" },
-];
+const PROVIDERS = Object.entries(PROVIDER_LABEL).map(([id, label]) => ({ id, label }));
 
 export default async function KeysPage({
   searchParams,
@@ -35,42 +40,40 @@ export default async function KeysPage({
 
   return (
     <main className="mx-auto max-w-4xl space-y-8 px-8 py-8">
-      <div>
-        <h1 className="text-2xl font-bold">API Keys y conexiones</h1>
-        <p className="text-sm text-default-500">
-          Claves para integrar la API y credenciales de tus billeteras conectadas.
-        </p>
-      </div>
+      <PageHeader
+        title="API Keys y conexiones"
+        description="Claves para integrar la API y credenciales de tus billeteras conectadas."
+      />
 
       {created && (
-        <Card className="border-emerald-300 bg-emerald-50/60">
-          <CardContent className="py-4">
+        <Panel className="border-emerald-300 bg-emerald-50/60">
+          <PanelBody>
             <p className="text-sm font-semibold text-emerald-800">
               Guardá esta clave — solo se muestra una vez:
             </p>
-            <code className="mt-2 block break-all rounded-md bg-white px-3 py-2 font-mono text-sm">
+            <code className="mt-2 block break-all rounded-xl border border-emerald-200 bg-white px-3 py-2 font-mono text-sm">
               {created}
             </code>
-          </CardContent>
-        </Card>
+          </PanelBody>
+        </Panel>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>API Keys</CardTitle>
-          <CardDescription>Usalas en Authorization: Bearer &lt;key&gt;</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Panel>
+        <PanelHeader
+          title="API Keys"
+          description="Usalas en Authorization: Bearer <key>"
+        />
+        <PanelBody className="space-y-4">
           <form action={createApiKey} className="flex items-end gap-3">
-            <div className="flex-1">
+            <div className="flex flex-1 flex-col gap-1.5">
               <Label htmlFor="name">Nombre</Label>
               <Input id="name" name="name" placeholder="producción, staging…" required />
             </div>
-            <Button type="submit" variant="primary">Crear key</Button>
+            <Button type="submit" size="sm" className={BTN_PRIMARY}>Crear key</Button>
           </form>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b text-left text-default-500">
+              <tr className={TABLE_HEAD}>
                 <th className="pb-2 font-medium">Nombre</th>
                 <th className="pb-2 font-medium">Prefijo</th>
                 <th className="pb-2 font-medium">Último uso</th>
@@ -80,24 +83,24 @@ export default async function KeysPage({
             </thead>
             <tbody>
               {keys.length === 0 && (
-                <tr><td colSpan={5} className="py-6 text-center text-default-400">Sin keys todavía.</td></tr>
+                <tr><td colSpan={5} className="py-6 text-center text-muted">Sin keys todavía.</td></tr>
               )}
               {keys.map((k) => (
-                <tr key={k.id} className="border-b last:border-0">
+                <tr key={k.id} className={TABLE_ROW}>
                   <td className="py-2.5">{k.name}</td>
                   <td className="py-2.5 font-mono text-xs">{k.prefix}…</td>
-                  <td className="py-2.5 text-default-500">
+                  <td className="py-2.5 text-muted">
                     {k.lastUsedAt ? k.lastUsedAt.toLocaleDateString("es-AR") : "nunca"}
                   </td>
                   <td className="py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${k.revokedAt ? "bg-danger-100 text-danger-700" : "bg-success-100 text-success-700"}`}>
+                    <Badge tone={k.revokedAt ? "bg-red-100 text-red-600" : "bg-emerald-100 text-emerald-700"}>
                       {k.revokedAt ? "Revocada" : "Activa"}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="py-2.5 text-right">
                     {!k.revokedAt && (
                       <form action={revokeApiKey.bind(null, k.id)}>
-                        <Button type="submit" variant="ghost" size="sm" className="text-danger-600">
+                        <Button type="submit" variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
                           Revocar
                         </Button>
                       </form>
@@ -107,29 +110,27 @@ export default async function KeysPage({
               ))}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Billeteras conectadas</CardTitle>
-          <CardDescription>
-            Las credenciales PSP se cargan por API (POST /api/v1/credentials) — cifradas con AES-256-GCM.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Panel>
+        <PanelHeader
+          title="Billeteras conectadas"
+          description="Las credenciales PSP se cargan por API (POST /api/v1/credentials) — cifradas con AES-256-GCM."
+        />
+        <PanelBody>
           <div className="grid gap-3 sm:grid-cols-2">
             {PROVIDERS.map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded-xl border border-default-200 p-4">
+              <div key={p.id} className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-white/70 p-4">
                 <span className="font-medium">{p.label}</span>
-                <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${connected.has(p.id) ? "bg-success-100 text-success-700" : "bg-default-100 text-default-500"}`}>
+                <Badge tone={connected.has(p.id) ? "bg-emerald-100 text-emerald-700" : "bg-zinc-200/70 text-zinc-600"}>
                   {connected.has(p.id) ? "Conectada" : "Sin conectar"}
-                </span>
+                </Badge>
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
     </main>
   );
 }

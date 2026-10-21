@@ -10,8 +10,9 @@
     "lint": "tsc --noEmit",
     "build": "tsc --noEmit",
     "test": "vitest run --passWithNoTests",
-    "worker": "tsx src/worker.ts",
-    "dev": "tsx watch src/worker.ts"
+    "worker": "tsx --env-file=../../.env src/worker.ts",
+    "dev": "tsx watch --env-file=../../.env src/worker.ts",
+    "demo": "tsx src/demo-simulate.ts"
   },
   "dependencies": {
     "@plata-neta/core": "workspace:*",

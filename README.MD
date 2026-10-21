@@ -63,6 +63,21 @@ pnpm --filter @plata-neta/jobs dev
 Comandos útiles: `pnpm lint` (typecheck), `pnpm test`, `pnpm build`,
 `pnpm db:studio` (Prisma Studio), `pnpm db:migrate`.
 
+## Demo visual
+
+`pnpm db:seed` carga además **datos demo**: 15 cobros en todos los estados
+across 4 providers, 4 payouts (1 esperando aprobación), 1 ciclo de
+suscripción y eventos de auditoría — todo con ledger consistente.
+
+```bash
+pnpm --filter @plata-neta/jobs demo   # simulador: cobros vivos +
+                                    # payouts que el worker ejecuta
+```
+
+El simulador crea cobros que transicionan PENDING→PROCESSING→SUCCEEDED
+con asientos reales del ledger, y payouts bajo umbral que `payout.execute`
+resuelve a SUCCEEDED. Recargá el dashboard para verlos moverse.
+
 ## Credenciales de prueba (solo desarrollo/sandbox)
 
 Tenant: **Comercio Demo** (plan starter, KYC verificado)

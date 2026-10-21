@@ -42,7 +42,7 @@ export function Faq() {
             className={`overflow-hidden rounded-2xl border transition-all duration-300 ${
               isOpen
                 ? "border-emerald-300 bg-white/80 shadow-lg shadow-emerald-100/50"
-                : "border-default-200 bg-white/50 hover:border-emerald-200 hover:bg-white/70"
+                : "border-separator bg-white/50 hover:border-emerald-200 hover:bg-white/70"
             }`}
           >
             <button
@@ -55,7 +55,7 @@ export function Faq() {
               </span>
               <span
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
-                  isOpen ? "rotate-45 bg-emerald-500 text-white" : "bg-default-100 text-default-500"
+                  isOpen ? "rotate-45 bg-emerald-500 text-white" : "bg-default-soft text-muted"
                 }`}
               >
                 <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -68,7 +68,7 @@ export function Faq() {
               style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
             >
               <div className="overflow-hidden">
-                <p className="px-6 pb-5 text-sm leading-relaxed text-default-500">{f.a}</p>
+                <p className="px-6 pb-5 text-sm leading-relaxed text-muted">{f.a}</p>
               </div>
             </div>
           </div>

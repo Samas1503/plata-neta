@@ -1,5 +1,18 @@
 import { redirect } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/heroui";
+import {
+  Badge,
+  Panel,
+  PanelHeader,
+  PanelBody,
+  PageHeader,
+  PANEL_SOFT,
+  TABLE_HEAD,
+  TABLE_ROW,
+  TX_BADGE,
+  TX_LABEL,
+  PROVIDER_LABEL,
+  formatARS,
+} from "@/components/ds";
 import { prisma } from "@plata-neta/db";
 import { auth } from "@/auth";
 
@@ -41,31 +54,36 @@ export default async function ReconciliationPage() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-8 py-8">
-      <div>
-        <h1 className="text-2xl font-bold">Conciliación</h1>
-        <p className="text-sm text-default-500">
-          Intents vs ledger interno + webhooks pendientes de procesar.
-        </p>
-      </div>
+      <PageHeader
+        title="Conciliación"
+        description="Intents vs ledger interno + webhooks pendientes de procesar."
+      />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card><CardHeader><CardDescription>Intents verificados</CardDescription><CardTitle className="text-2xl">{intents.length}</CardTitle></CardHeader></Card>
-        <Card><CardHeader><CardDescription>Consistentes</CardDescription><CardTitle className="text-2xl text-emerald-600">{ok}</CardTitle></CardHeader></Card>
-        <Card><CardHeader><CardDescription>Webhooks sin procesar</CardDescription><CardTitle className="text-2xl">{webhooks}</CardTitle></CardHeader></Card>
+        {[
+          { label: "Intents verificados", value: intents.length },
+          { label: "Consistentes", value: ok, accent: true },
+          { label: "Webhooks sin procesar", value: webhooks },
+        ].map((k) => (
+          <div key={k.label} className={`${PANEL_SOFT} px-6 py-5`}>
+            <p className="text-sm text-muted">{k.label}</p>
+            <p className={`mt-1 text-2xl font-bold tracking-tight ${k.accent ? "text-emerald-600" : ""}`}>
+              {k.value}
+            </p>
+          </div>
+        ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Desajustes</CardTitle>
-          <CardDescription>
-            {drifts.length === 0 ? "Todo balanceado." : `${drifts.length} intent(s) con diferencias.`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Panel>
+        <PanelHeader
+          title="Desajustes"
+          description={drifts.length === 0 ? "Todo balanceado." : `${drifts.length} intent(s) con diferencias.`}
+        />
+        <PanelBody>
           {drifts.length > 0 && (
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left text-default-500">
+                <tr className={TABLE_HEAD}>
                   <th className="pb-2 font-medium">Intent</th>
                   <th className="pb-2 font-medium">Proveedor</th>
                   <th className="pb-2 font-medium">Estado</th>
@@ -74,20 +92,20 @@ export default async function ReconciliationPage() {
               </thead>
               <tbody>
                 {drifts.map((i) => (
-                  <tr key={i.id} className="border-b last:border-0">
+                  <tr key={i.id} className={TABLE_ROW}>
                     <td className="py-2.5 font-mono text-xs">{i.id.slice(0, 14)}…</td>
-                    <td className="py-2.5">{i.provider}</td>
-                    <td className="py-2.5">{i.status}</td>
-                    <td className="py-2.5 font-medium">
-                      {new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(Number(i.amountCents) / 100)}
+                    <td className="py-2.5">{PROVIDER_LABEL[i.provider] ?? i.provider}</td>
+                    <td className="py-2.5">
+                      <Badge tone={TX_BADGE[i.status] ?? ""}>{TX_LABEL[i.status] ?? i.status}</Badge>
                     </td>
+                    <td className="py-2.5 font-medium">{formatARS(i.amountCents)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
-        </CardContent>
-      </Card>
+        </PanelBody>
+      </Panel>
     </main>
   );
 }
