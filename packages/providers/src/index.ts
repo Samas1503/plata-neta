@@ -5,3 +5,4 @@ export { ualaProvider } from "./uala/index";
 export { naranjaxProvider } from "./naranjax/index";
 export { modoProvider } from "./modo/index";
 export { createCvuAdapter } from "./cvu-adapter";
+export { ripioProvider } from "./ripio/index";

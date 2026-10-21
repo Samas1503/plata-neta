@@ -3,6 +3,7 @@ import {
   modoProvider,
   naranjaxProvider,
   registerProvider,
+  ripioProvider,
   ualaProvider,
 } from "@plata-neta/providers";
 import type { ProviderCredentials } from "@plata-neta/providers";
@@ -15,6 +16,7 @@ export function ensureProvidersRegistered(): void {
     registerProvider(ualaProvider);
     registerProvider(naranjaxProvider);
     registerProvider(modoProvider);
+    registerProvider(ripioProvider);
     registered = true;
   }
 }
