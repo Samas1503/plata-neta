@@ -3,6 +3,7 @@ import { Button } from "@/components/heroui";
 import { Hero3D } from "@/components/hero3d";
 import { Reveal } from "@/components/reveal";
 import { PointViz } from "@/components/pointviz";
+import { StatusFlow } from "@/components/statusflow";
 
 const BTN_PRIMARY =
   "rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 font-semibold text-white shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/40 hover:brightness-110 active:translate-y-0";
@@ -40,6 +41,7 @@ const SECTIONS = [
     text: "Generá un intent de cobro y recibí plata por CVU, alias o QR interoperable — Mercado Pago, MODO, Ualá o Naranja X. Confirmación en tiempo real vía webhooks verificados.",
     points: [
       ["Un solo link de cobro", "link", ICONS.arrow],
+      ["Estado en vivo", "flow", ICONS.bolt],
       ["Idempotente", "idem", ICONS.shield],
     ],
     accent: { text: "text-emerald-600", bg: "bg-emerald-500", soft: "bg-emerald-50", border: "border-emerald-200", glow: "shadow-emerald-200/60" },
@@ -152,7 +154,11 @@ export default function Home() {
                       </div>
                       <div className="min-w-0">
                         <h3 className="font-semibold">{t}</h3>
-<PointViz kind={viz as string} />
+{viz === "flow" ? (
+                          <StatusFlow />
+                        ) : (
+                          <PointViz kind={viz as string} />
+                        )}
                       </div>
                     </div>
                   ))}
