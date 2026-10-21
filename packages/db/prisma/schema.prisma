@@ -135,6 +135,7 @@ model Payout {
   status         TxStatus  @default(PENDING)
   idempotencyKey String
   externalRef    String?
+  createdByUserId String? // usuario del dashboard que creó el payout
   approvedById   String? // aprobación en dos pasos sobre umbral (RULES.MD §1)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
