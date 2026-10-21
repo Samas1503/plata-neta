@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/heroui";
 import { Hero3D } from "@/components/hero3d";
 import { Reveal } from "@/components/reveal";
+import { StatusFlow } from "@/components/statusflow";
 
 const BTN_PRIMARY =
   "rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 font-semibold text-white shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/40 hover:brightness-110 active:translate-y-0";
@@ -150,9 +151,13 @@ export default function Home() {
                       <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${s.accent.soft} ${s.accent.text} transition-transform group-hover:scale-110`}>
                         <Icon d={icon as string} className="h-4.5 w-4.5" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-semibold">{t}</h3>
-                        <p className="mt-0.5 text-sm text-default-500">{d}</p>
+                        {t === "Estado en vivo" ? (
+                          <StatusFlow />
+                        ) : (
+                          <p className="mt-0.5 text-sm text-default-500">{d}</p>
+                        )}
                       </div>
                     </div>
                   ))}
