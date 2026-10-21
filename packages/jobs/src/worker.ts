@@ -2,6 +2,7 @@ import { Worker } from "bullmq";
 import { connection } from "./redis";
 import { JOBS } from "./types";
 import { expireIntents, processWebhook, reconcile } from "./processors";
+import { billSubscription } from "./subscription";
 
 const worker = new Worker(
   "plata-neta",
@@ -13,6 +14,8 @@ const worker = new Worker(
         return expireIntents(job.data);
       case JOBS.RECONCILE_RUN:
         return reconcile();
+      case JOBS.SUBSCRIPTION_BILL:
+        return billSubscription(job.data);
       default:
         throw new Error(`unknown job: ${job.name}`);
     }

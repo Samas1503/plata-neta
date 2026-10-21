@@ -14,11 +14,16 @@ function hashPassword(password) {
 const DEMO_PASSWORD = "demo1234";
 
 async function main() {
-  const plan = await prisma.plan.upsert({
-    where: { name: "starter" },
-    update: {},
-    create: { name: "starter", gmvThreshold: 0n, monthlyPrice: 0n },
-  });
+  const plans = [
+    { name: "starter", gmvThreshold: 0n, monthlyPrice: 0n },
+    { name: "growth", gmvThreshold: 50_000_000n, monthlyPrice: 1_500_000n }, // >$500k GMV → $15k
+    { name: "scale", gmvThreshold: 500_000_000n, monthlyPrice: 7_500_000n }, // >$5M → $75k
+    { name: "enterprise", gmvThreshold: 5_000_000_000n, monthlyPrice: 30_000_000n }, // >$50M → $300k
+  ];
+  const plan = plans[0];
+  for (const p of plans) {
+    await prisma.plan.upsert({ where: { name: p.name }, update: p, create: p });
+  }
 
   const tenant = await prisma.tenant.upsert({
     where: { slug: "comercio-demo" },
