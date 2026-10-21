@@ -12,7 +12,7 @@
     "test": "vitest run --passWithNoTests",
     "worker": "tsx --env-file=../../.env src/worker.ts",
     "dev": "tsx watch --env-file=../../.env src/worker.ts",
-    "demo": "tsx src/demo-simulate.ts"
+    "demo": "tsx --env-file=../../.env src/demo-simulate.ts"
   },
   "dependencies": {
     "@plata-neta/core": "workspace:*",
