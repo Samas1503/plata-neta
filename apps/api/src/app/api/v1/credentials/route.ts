@@ -1,14 +1,26 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@plata-neta/db";
 import { isProviderId } from "@plata-neta/providers";
-import { encryptJson } from "@/lib/crypto";
+import { authenticateApiKey } from "@/lib/apikey";
+import { encryptJson } from "@plata-neta/db";
+import { rateLimit, rateLimitKey } from "@/lib/ratelimit";
 
 // POST /api/v1/credentials — upsert de PspCredential del comercio (cifrada en reposo).
-// Dev tool de Fase 0/1 — antes de producción: auth de tenant + rate limiting.
+// tenantId deriva de la API key — nunca del body (aislamiento multi-tenant).
 
 export async function POST(req: NextRequest) {
+  const rl = await rateLimit(rateLimitKey(req, "creds"), 10);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "rate limited" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+  const auth = await authenticateApiKey(req);
+  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  const tenantId = auth.tenantId;
+
   let body: {
-    tenantId?: string;
     provider?: string;
     accessToken?: string;
     webhookSecret?: string;
@@ -20,10 +32,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
-  const { tenantId, provider, accessToken, webhookSecret, baseUrl } = body;
-  if (!tenantId || !provider || !accessToken) {
+  const { provider, accessToken, webhookSecret, baseUrl } = body;
+  if (!provider || !accessToken) {
     return NextResponse.json(
-      { error: "required: tenantId, provider, accessToken" },
+      { error: "required: provider, accessToken" },
       { status: 400 },
     );
   }

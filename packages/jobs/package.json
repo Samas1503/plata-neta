@@ -1,0 +1,29 @@
+{
+  "name": "@plata-neta/jobs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "build": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "worker": "tsx src/worker.ts",
+    "dev": "tsx watch src/worker.ts"
+  },
+  "dependencies": {
+    "@plata-neta/core": "workspace:*",
+    "@plata-neta/db": "workspace:*",
+    "@plata-neta/providers": "workspace:*",
+    "bullmq": "^5.34.0",
+    "ioredis": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}

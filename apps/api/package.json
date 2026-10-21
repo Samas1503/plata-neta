@@ -11,6 +11,7 @@
   "dependencies": {
     "@plata-neta/core": "workspace:*",
     "@plata-neta/db": "workspace:*",
+    "@plata-neta/jobs": "workspace:*",
     "@plata-neta/providers": "workspace:*",
     "next": "^15.5.0",
     "react": "^19.1.0",

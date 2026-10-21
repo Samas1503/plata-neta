@@ -49,6 +49,7 @@ model Tenant {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   users         User[]
+  apiKeys       ApiKey[]
   credentials   PspCredential[]
   intents       PaymentIntent[]
   payouts       Payout[]
@@ -75,6 +76,21 @@ model Plan {
   gmvThreshold BigInt // GMV mensual mínimo del tier, en centavos ARS
   monthlyPrice BigInt // precio mensual, en centavos ARS
   tenants      Tenant[]
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  tenantId   String
+  tenant     Tenant    @relation(fields: [tenantId], references: [id])
+  name       String
+  prefix     String // pk_live_ | sk_live_ | pk_test_ | sk_test_
+  keyHash    String // sha256 del secret — nunca se guarda en claro
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@unique([tenantId, prefix])
+  @@index([keyHash])
 }
 
 model PspCredential {

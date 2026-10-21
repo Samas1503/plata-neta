@@ -6,14 +6,37 @@ import {
   canTransition,
   entriesForCollectionPending,
 } from "@plata-neta/core";
-import { decryptJson } from "@/lib/crypto";
+import { authenticateApiKey } from "@/lib/apikey";
+import { decryptJson } from "@plata-neta/db";
 import { ensureProvidersRegistered, toCredentials } from "@/lib/providers";
+import { rateLimit, rateLimitKey } from "@/lib/ratelimit";
+
+// GET /api/v1/payment-intents — listar intents del tenant autenticado.
+export async function GET(req: NextRequest) {
+  const auth = await authenticateApiKey(req);
+  if (!auth) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const url = new URL(req.url);
+  const status = url.searchParams.get("status");
+  const provider = url.searchParams.get("provider");
+  const take = Math.min(Number(url.searchParams.get("limit")) || 50, 200);
+
+  const intents = await prisma.paymentIntent.findMany({
+    where: {
+      tenantId: auth.tenantId,
+      ...(status ? { status: status as never } : {}),
+      ...(provider ? { provider } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take,
+  });
+  return NextResponse.json({ intents });
+}
 
 // POST /api/v1/payment-intents — crear intent de cobro.
 // Idempotencia estricta por (tenantId, idempotencyKey) — RULES.MD §1.
 
 interface CreateBody {
-  tenantId?: string;
   provider?: string;
   amountCents?: number | string;
   currency?: string;
@@ -24,6 +47,20 @@ interface CreateBody {
 export async function POST(req: NextRequest) {
   ensureProvidersRegistered();
 
+  const rl = await rateLimit(rateLimitKey(req, "intents"), 60);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "rate limited" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
+  const auth = await authenticateApiKey(req);
+  if (!auth) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  const tenantId = auth.tenantId;
+
   let body: CreateBody;
   try {
     body = (await req.json()) as CreateBody;
@@ -31,10 +68,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid json" }, { status: 400 });
   }
 
-  const { tenantId, provider = "mercadopago", amountCents, currency = "ARS", idempotencyKey, metadata } = body;
-  if (!tenantId || !idempotencyKey || amountCents == null) {
+  const { provider = "mercadopago", amountCents, currency = "ARS", idempotencyKey, metadata } = body;
+  if (!idempotencyKey || amountCents == null) {
     return NextResponse.json(
-      { error: "required: tenantId, idempotencyKey, amountCents" },
+      { error: "required: idempotencyKey, amountCents" },
       { status: 400 },
     );
   }
