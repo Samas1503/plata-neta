@@ -24,7 +24,7 @@ comercio; plata-neta nunca custodia dinero.
 ```
 apps/
   web/   # Dashboard del comercio — http://localhost:3500
-  api/   # REST API + webhooks PSP — http://localhost:3001
+  api/   # REST API + webhooks PSP — http://localhost:4500
 packages/
   db/        # Prisma schema, migraciones, seed
   core/      # Money, máquina de estados TxStatus, errores de dominio
@@ -55,7 +55,7 @@ pnpm db:push                     # crea el schema
 pnpm db:seed                     # tenant + usuarios demo
 
 # 4. Levantar todo
-pnpm dev                         # turbo: web :3500 · api :3001 · worker de jobs
+pnpm dev                         # turbo: web :3500 · api :4500 · worker de jobs
 # o el worker por separado:
 pnpm --filter @plata-neta/jobs dev
 ```
@@ -89,12 +89,12 @@ Además de `DATABASE_URL` y `AUTH_SECRET` (lista completa en `.env.example`):
 
 ## API keys y auth de la API
 
-La API REST (`:3001`) autentica con `Authorization: Bearer sk_test_...`
+La API REST (`:4500`) autentica con `Authorization: Bearer sk_test_...`
 (`sk_live_` en producción). La primera key de cada tenant se crea con el
 bootstrap secret — **solo si el tenant aún no tiene keys**:
 
 ```bash
-curl -X POST http://localhost:3001/api/v1/api-keys \
+curl -X POST http://localhost:4500/api/v1/api-keys \
   -H "x-bootstrap-secret: $BOOTSTRAP_SECRET" \
   -H "content-type: application/json" \
   -d '{"tenantId": "<cuid-del-tenant>", "name": "default"}'

@@ -16,7 +16,7 @@ export async function createApiKey(formData: FormData): Promise<void> {
   const tenantId = await requireOwner();
   const name = String(formData.get("name") ?? "").trim() || "default";
 
-  const res = await fetch(`${process.env.API_INTERNAL_URL ?? "http://localhost:3001"}/api/v1/api-keys`, {
+  const res = await fetch(`${process.env.API_INTERNAL_URL ?? "http://localhost:4500"}/api/v1/api-keys`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
