@@ -4,6 +4,7 @@ import { Hero3D } from "@/components/hero3d";
 import { Reveal } from "@/components/reveal";
 import { PointViz } from "@/components/pointviz";
 import { StatusFlow } from "@/components/statusflow";
+import { Faq } from "@/components/faq";
 
 const BTN_PRIMARY =
   "rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 font-semibold text-white shadow-lg shadow-emerald-500/30 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-emerald-500/40 hover:brightness-110 active:translate-y-0";
@@ -202,6 +203,21 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="text-center">
+          <Reveal>
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">
+              Preguntas frecuentes
+            </h2>
+            <p className="mx-auto mt-3 max-w-lg text-default-500">
+              Todo lo que necesitás saber antes de empezar.
+            </p>
+          </Reveal>
+          <Reveal delay={100} className="mt-10">
+            <Faq />
+          </Reveal>
         </section>
 
         {/* Testimonios */}
