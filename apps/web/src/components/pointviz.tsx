@@ -97,10 +97,10 @@ export function PointViz({ kind }: { kind: string }) {
     // débito / crédito balanceándose
     return (
       <div className="mt-1 space-y-1">
-        {[
+        {([
           ["available", "+$10.000", "bg-emerald-50 text-emerald-700 ring-emerald-200", step !== 0],
           ["pending", "-$10.000", "bg-amber-50 text-amber-700 ring-amber-200", step !== 0],
-        ].map(([acc, amt, cls, ok]) => (
+        ] as [string, string, string, boolean][]).map(([acc, amt, cls, ok]) => (
           <div key={acc} className={`flex items-center justify-between rounded-md px-2 py-1 ring-1 ${cls}`}>
             <span className="font-mono text-[10px]">{acc}</span>
             <span className={`font-mono text-[10px] font-bold transition-all duration-500 ${ok ? "opacity-100" : "opacity-40"}`}>
