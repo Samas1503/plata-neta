@@ -1,0 +1,17 @@
+node_modules/
+.next/
+dist/
+.turbo/
+*.tsbuildinfo
+
+# env — real secrets never committed (RULES.MD §2)
+.env
+.env.*
+!.env.example
+
+# generated
+apps/web/next-env.d.ts
+apps/api/next-env.d.ts
+
+# orchestration/debate scratch
+.context/

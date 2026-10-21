@@ -1,0 +1,23 @@
+{
+  "name": "plata-neta",
+  "private": true,
+  "packageManager": "pnpm@12.9.1",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "db:generate": "pnpm --filter @plata-neta/db generate",
+    "db:migrate": "pnpm --filter @plata-neta/db migrate",
+    "db:push": "pnpm --filter @plata-neta/db push",
+    "db:seed": "pnpm --filter @plata-neta/db seed",
+    "db:studio": "pnpm --filter @plata-neta/db studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
