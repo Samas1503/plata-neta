@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@plata-neta/db";
 import { canTransition, entriesForPayoutSent } from "@plata-neta/core";
 import { authenticateApiKey } from "@/lib/apikey";
+import { audit } from "@/lib/audit";
 
 // POST /api/v1/payouts/:id/approve — aprobación en dos pasos (RULES.MD §1).
 // El aprobador debe ser distinto del creador (por userId del dashboard o key distinta).
@@ -46,5 +47,6 @@ export async function POST(
     }
   });
 
+  await audit({ tenantId: auth.tenantId, apiKeyId: auth.keyId, action: "payout.approve", entity: "payout", entityId: payout.id });
   return NextResponse.json({ payout: updated });
 }

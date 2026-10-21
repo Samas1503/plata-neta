@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@plata-neta/db";
 import { canTransition, entriesForPayoutSent } from "@plata-neta/core";
 import { auth } from "@/auth";
+import { prisma as db } from "@plata-neta/db";
 
 async function requireRole(roles: string[]) {
   const session = await auth();
@@ -24,7 +25,7 @@ export async function createPayout(formData: FormData): Promise<void> {
   }
   const amountCents = BigInt(Math.round(amountArs * 100));
 
-  await prisma.payout.create({
+  const payout = await prisma.payout.create({
     data: {
       tenantId: user.tenantId,
       provider: "mercadopago",
@@ -36,6 +37,7 @@ export async function createPayout(formData: FormData): Promise<void> {
       status: amountCents >= APPROVAL_THRESHOLD ? "PENDING" : "PROCESSING",
     },
   });
+  await db.auditLog.create({ data: { tenantId: user.tenantId, userId: user.id!, action: "payout.create", entity: "payout", entityId: payout.id } });
   redirect("/dashboard/payouts");
 }
 
@@ -67,5 +69,6 @@ export async function approvePayout(payoutId: string): Promise<void> {
       });
     }
   });
+  await db.auditLog.create({ data: { tenantId: payout.tenantId, userId: user.id!, action: "payout.approve", entity: "payout", entityId: payout.id } });
   redirect("/dashboard/payouts");
 }

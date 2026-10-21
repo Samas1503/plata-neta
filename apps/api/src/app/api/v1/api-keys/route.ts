@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@plata-neta/db";
 import { authenticateApiKey, generateApiKey } from "@/lib/apikey";
+import { audit } from "@/lib/audit";
 
 // POST /api/v1/api-keys — crear key (devuelve el secreto UNA sola vez).
 // Bootstrap: mientras no haya OAuth, la primera key por tenant se crea con
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
     data: { tenantId, name, prefix, keyHash },
   });
 
+  await audit({ tenantId, apiKeyId: auth?.keyId, action: "api_key.create", entity: "api_key", entityId: key.id, metadata: { name } });
   // El secreto completo solo aparece en esta respuesta.
   return NextResponse.json(
     {

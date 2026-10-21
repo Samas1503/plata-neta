@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@plata-neta/db";
 import { authenticateApiKey } from "@/lib/apikey";
+import { audit } from "@/lib/audit";
 
 // DELETE /api/v1/api-keys/:id — revocar (no borra, marca revokedAt).
 export async function DELETE(
@@ -20,5 +21,6 @@ export async function DELETE(
     where: { id },
     data: { revokedAt: new Date() },
   });
+  await audit({ tenantId: auth.tenantId, apiKeyId: auth.keyId, action: "api_key.revoke", entity: "api_key", entityId: id });
   return NextResponse.json({ revoked: true });
 }

@@ -173,6 +173,21 @@ model WebhookEvent {
   @@index([processedAt])
 }
 
+model AuditLog {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String? // user del dashboard o null si fue via API key
+  apiKeyId  String? // key que ejecutó la acción
+  action    String // api_key.create | api_key.revoke | payout.create | payout.approve | credential.upsert | plan.change
+  entity    String
+  entityId  String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([tenantId, createdAt])
+  @@index([entity, entityId])
+}
+
 model SubscriptionCycle {
   id          String    @id @default(cuid())
   tenantId    String

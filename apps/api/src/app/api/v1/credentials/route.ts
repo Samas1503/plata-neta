@@ -3,6 +3,7 @@ import { prisma } from "@plata-neta/db";
 import { isProviderId } from "@plata-neta/providers";
 import { authenticateApiKey } from "@/lib/apikey";
 import { encryptJson } from "@plata-neta/db";
+import { audit } from "@/lib/audit";
 import { rateLimit, rateLimitKey } from "@/lib/ratelimit";
 
 // POST /api/v1/credentials — upsert de PspCredential del comercio (cifrada en reposo).
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
     create: { tenantId, provider, encryptedKeys },
   });
 
+  await audit({ tenantId, apiKeyId: auth.keyId, action: "credential.upsert", entity: "psp_credential", entityId: credential.id, metadata: { provider } });
   // Nunca devolver material sensible — solo metadatos.
   return NextResponse.json(
     { credential: { id: credential.id, tenantId, provider } },

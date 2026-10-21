@@ -4,6 +4,7 @@ import { isProviderId } from "@plata-neta/providers";
 import { entriesForPayoutSent } from "@plata-neta/core";
 import { authenticateApiKey } from "@/lib/apikey";
 import { rateLimit, rateLimitKey } from "@/lib/ratelimit";
+import { audit } from "@/lib/audit";
 
 const APPROVAL_THRESHOLD = BigInt(process.env.PAYOUT_APPROVAL_THRESHOLD ?? "10000000"); // $100k ARS default
 
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  await audit({ tenantId, apiKeyId: auth.keyId, action: "payout.create", entity: "payout", entityId: payout.id, metadata: { amountCents: amount.toString(), payeeRef } });
   return NextResponse.json(
     { payout, requiresApproval: needsApproval },
     { status: 201 },
