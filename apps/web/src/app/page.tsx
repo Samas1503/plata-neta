@@ -62,9 +62,8 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <header className="relative mx-auto flex max-w-5xl flex-col items-center px-8 pb-24 pt-20 text-center">
-        <Hero3D />
-        <Reveal>
+      <header className="relative mx-auto grid max-w-6xl items-center gap-8 px-8 pb-24 pt-20 md:grid-cols-2">
+        <Reveal className="text-left">
           <div className="rounded-3xl border border-white/30 bg-white/50 px-10 py-10 shadow-xl shadow-emerald-100/40 backdrop-blur-xl">
             <p className="text-sm font-semibold uppercase tracking-widest text-emerald-600">
               Cobros y pagos por transferencia
@@ -74,17 +73,20 @@ export default function Home() {
               <br />
               en un solo lugar
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-lg text-default-600">
+            <p className="mt-6 max-w-xl text-lg text-default-600">
               Mercado Pago, MODO, Ualá, Naranja X y stablecoins vía Ripio.
               Suscripción mensual según tu volumen — los fondos van directo
               a tus cuentas, nunca por las nuestras.
             </p>
-            <div className="mt-8 flex justify-center gap-3">
+            <div className="mt-8 flex gap-3">
               <Link href="/register"><Button variant="primary" size="lg">Empezar ahora</Button></Link>
               <Link href="/login"><Button variant="outline" size="lg">Ya tengo cuenta</Button></Link>
             </div>
           </div>
         </Reveal>
+        <div className="relative hidden h-[480px] md:block">
+          <Hero3D />
+        </div>
       </header>
 
       {/* Secciones alternadas */}
