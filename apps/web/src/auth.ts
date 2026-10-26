@@ -28,16 +28,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.tenantId = user.tenantId;
         token.role = user.role;
+      }
+      // AUTH-4: role/tenant frescos cada request — un demotion revoca acceso
+      // en el próximo llamado en vez de esperar la expiración del JWT.
+      if (token.sub) {
+        const row = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { role: true, tenantId: true },
+        });
+        if (row) {
+          token.role = row.role;
+          token.tenantId = row.tenantId;
+        }
       }
       return token;
     },
     session({ session, token }) {
       session.user.tenantId = token.tenantId as string;
       session.user.role = token.role as typeof session.user.role;
+      // AUTH-1: @auth/core no puebla user.id con JWT — viene en token.sub.
+      if (token.sub) session.user.id = token.sub;
       return session;
     },
   },

@@ -12,7 +12,7 @@ async function requireOwner() {
   return session.user.tenantId;
 }
 
-export async function createApiKey(formData: FormData): Promise<void> {
+export async function createApiKey(formData: FormData): Promise<{ apiKey?: string; error?: string }> {
   const tenantId = await requireOwner();
   const name = String(formData.get("name") ?? "").trim() || "default";
 
@@ -24,9 +24,9 @@ export async function createApiKey(formData: FormData): Promise<void> {
     },
     body: JSON.stringify({ tenantId, name }),
   });
-  if (!res.ok) redirect("/dashboard/keys?error=create");
+  if (!res.ok) return { error: "create failed" };
   const { apiKey } = (await res.json()) as { apiKey: string };
-  redirect(`/dashboard/keys?created=${encodeURIComponent(apiKey)}`);
+  return { apiKey };
 }
 
 export async function revokeApiKey(id: string): Promise<void> {

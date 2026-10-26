@@ -30,10 +30,17 @@ export async function processWebhook(data: WebhookProcessData) {
     where: { id: data.webhookEventId },
   });
   if (!event || event.processedAt) return;
+  // SEC-6: nunca procesar un evento cuya firma no validó en el route.
+  if (!event.signatureValid) {
+    await prisma.webhookEvent.update({ where: { id: event.id }, data: { processedAt: new Date() } });
+    return;
+  }
 
   const { getProvider } = await import("@plata-neta/providers");
   const adapter = getProvider(event.provider as ProviderId);
-  const parsed = adapter.parseWebhook(JSON.stringify(event.payload)); // eslint-disable-line
+  // SEC-6: payload guardado como { raw: body } — parsear el cuerpo real firmado.
+  const rawPayload = (event.payload as { raw?: string } | null)?.raw ?? JSON.stringify(event.payload);
+  const parsed = adapter.parseWebhook(rawPayload); // eslint-disable-line
 
   const intent = await prisma.paymentIntent.findFirst({
     where: { externalRef: parsed.externalRef, provider: event.provider },
@@ -52,10 +59,12 @@ export async function processWebhook(data: WebhookProcessData) {
   const newStatus = await adapter.getStatus(parsed.externalRef, creds);
   if (newStatus !== intent.status && canTransition(intent.status, newStatus)) {
     await prisma.$transaction(async (tx) => {
-      await tx.paymentIntent.update({
-        where: { id: intent.id },
+      // SEC-5: transición atómica — si otro job ya movió el intent, no acreditar dos veces.
+      const { count } = await tx.paymentIntent.updateMany({
+        where: { id: intent.id, status: intent.status },
         data: { status: newStatus },
       });
+      if (count !== 1) return;
       const entries =
         newStatus === "SUCCEEDED"
           ? entriesForCollectionSucceeded(intent.id, intent.amountCents)

@@ -25,6 +25,10 @@ export async function POST(
   if (payout.approvedById) {
     return json({ error: "already approved" }, { status: 409 });
   }
+  // AUTH-2: separación de funciones — la misma key que creó no puede aprobar.
+  if (payout.createdByKeyId && payout.createdByKeyId === auth.keyId) {
+    return json({ error: "approver must differ from creator" }, { status: 403 });
+  }
 
   // Aprobar: marca approvedById con el id de la key aprobadora.
   const updated = await prisma.payout.update({

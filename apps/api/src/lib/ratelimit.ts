@@ -1,5 +1,6 @@
 import { connection } from "@plata-neta/jobs";
 import type { NextRequest } from "next/server";
+import { createHash } from "node:crypto";
 
 // Sliding window via INCR + EXPIRE: limit req/min por clave.
 export async function rateLimit(
@@ -21,6 +22,7 @@ export function rateLimitKey(req: NextRequest, suffix: string): string {
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
     "anon";
-  const id = auth ? auth.slice(-16) : ip;
+  // SEC-7: nunca material del token en claves Redis — solo hash.
+  const id = auth ? createHash("sha256").update(auth).digest("hex").slice(-16) : ip;
   return `${suffix}:${id}`;
 }

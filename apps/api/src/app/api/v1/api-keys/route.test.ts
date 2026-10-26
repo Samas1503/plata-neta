@@ -30,6 +30,11 @@ vi.mock("@plata-neta/db", () => ({
 
 import { GET, POST } from "./route";
 
+vi.mock("@/lib/ratelimit", () => ({
+  rateLimit: vi.fn(async () => ({ ok: true })),
+  rateLimitKey: vi.fn(() => "test-key"),
+}));
+
 describe("POST /api/v1/api-keys", () => {
   beforeEach(() => {
     vi.clearAllMocks();

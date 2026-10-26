@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     return json({ error: "invalid json" }, { status: 400 });
   }
 
-  const { provider, accessToken, webhookSecret, baseUrl, ...extra } = body;
+  const { provider, accessToken, webhookSecret, baseUrl: _ignoredBaseUrl, ...rest } = body;
   if (!provider || !accessToken) {
     return json(
       { error: "required: provider, accessToken" },
@@ -46,7 +46,13 @@ export async function POST(req: NextRequest) {
     return json({ error: `unknown provider: ${provider}` }, { status: 400 });
   }
 
-  const encryptedKeys = encryptJson({ accessToken, ...extra, webhookSecret, baseUrl });
+  // SEC-1: baseUrl del tenant nunca viaja a los adapters (SSRF/status-spoofing).
+  // SEC-8: extras con whitelist — solo datos de destino de pago.
+  const ALLOWED_EXTRA = new Set(["cvu", "cbu", "alias", "qrPayload", "depositAddress", "network", "asset"]);
+  const extra = Object.fromEntries(
+    Object.entries(rest).filter(([k, v]) => ALLOWED_EXTRA.has(k) && typeof v === "string" && v.length < 300),
+  );
+  const encryptedKeys = encryptJson({ accessToken, ...extra, webhookSecret });
 
   const credential = await prisma.pspCredential.upsert({
     where: { tenantId_provider: { tenantId, provider } },

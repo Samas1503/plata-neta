@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
       amountCents: amount,
       currency,
       idempotencyKey,
+      createdByKeyId: auth.keyId,
       status: needsApproval ? "PENDING" : "PROCESSING",
     },
   });

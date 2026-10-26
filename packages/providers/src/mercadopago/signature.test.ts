@@ -14,7 +14,7 @@ function sign(rawBody: string, requestId: string, ts: string) {
 describe("mercadopago webhook signature", () => {
   const body = JSON.stringify({ action: "payment.updated", data: { id: "12345" }, id: 999 });
   const requestId = "req-abc";
-  const ts = "1700000000";
+  const ts = String(Math.floor(Date.now() / 1000));
   const validHeaders = {
     "x-signature": `ts=${ts},v1=${sign(body, requestId, ts)}`,
     "x-request-id": requestId,

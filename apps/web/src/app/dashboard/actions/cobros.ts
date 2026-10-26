@@ -7,7 +7,9 @@ import { auth } from "@/auth";
 
 export async function createIntent(formData: FormData): Promise<void> {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  if (!session?.user || !["OWNER", "OPERATOR"].includes(session.user.role)) {
+    redirect("/dashboard");
+  }
   const tenantId = session.user.tenantId;
 
   const provider = String(formData.get("provider") ?? "");

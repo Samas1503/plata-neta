@@ -3,6 +3,7 @@ import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { getProvider, isProviderId } from "@plata-neta/providers";
 import { ensureProvidersRegistered } from "@/lib/providers";
+import { rateLimit, rateLimitKey } from "@/lib/ratelimit";
 
 // Webhooks PSP — RULES.MD §2:
 // - verificar firma ANTES de procesar; inválida → 401, nunca procesar
@@ -13,6 +14,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ provider: string }> },
 ) {
+  const rl = await rateLimit(rateLimitKey(req, "webhook"), 60);
+  if (!rl.ok) {
+    return json({ error: "rate limited" }, { status: 429, headers: { "Retry-After": String(rl.retryAfter) } });
+  }
   ensureProvidersRegistered();
 
   const { provider } = await params;
@@ -33,8 +38,9 @@ export async function POST(
     adapter = undefined;
   }
 
+  // AUTH-5: sin adapter o firma inválida → 401, nunca persistir ni procesar.
   const signatureValid = adapter?.verifySignature(rawBody, headers) ?? false;
-  if (adapter && !signatureValid) {
+  if (!adapter || !signatureValid) {
     return json({ error: "invalid signature" }, { status: 401 });
   }
 
@@ -55,14 +61,23 @@ export async function POST(
     }
   }
 
-  const event = await prisma.webhookEvent.create({
-    data: {
-      provider,
-      ...(eventId ? { eventId } : {}),
-      signatureValid,
-      payload: { raw: rawBody },
-    },
-  });
+  let event;
+  try {
+    event = await prisma.webhookEvent.create({
+      data: {
+        provider,
+        ...(eventId ? { eventId } : {}),
+        signatureValid,
+        payload: { raw: rawBody },
+      },
+    });
+  } catch (e) {
+    // SEC-5: unique (provider,eventId) — duplicado real → dedup aunque aún no se procesó.
+    if (eventId && (e as { code?: string }).code === "P2002") {
+      return json({ received: true, deduplicated: true, eventId });
+    }
+    throw e;
+  }
 
   // Encolar procesamiento async (BullMQ). Si Redis no está, procesar inline como fallback.
   try {

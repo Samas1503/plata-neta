@@ -3,12 +3,23 @@ import { json } from "@/lib/json";
 import { prisma } from "@plata-neta/db";
 import { authenticateApiKey, generateApiKey } from "@/lib/apikey";
 import { audit } from "@/lib/audit";
+import { rateLimit, rateLimitKey } from "@/lib/ratelimit";
+import { timingSafeEqual } from "node:crypto";
 
 // POST /api/v1/api-keys — crear key (devuelve el secreto UNA sola vez).
 // Bootstrap: mientras no haya OAuth, la primera key por tenant se crea con
 // header X-Bootstrap-Secret = BOOTSTRAP_SECRET + tenantId en el body.
 // Las siguientes requieren una API key válida.
+function secretEquals(a: string | null, b: string): boolean {
+  if (!a || a.length !== b.length) return false;
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+}
+
 export async function POST(req: NextRequest) {
+  const rl = await rateLimit(rateLimitKey(req, "apikeys"), 10);
+  if (!rl.ok) {
+    return json({ error: "rate limited" }, { status: 429, headers: { "Retry-After": String(rl.retryAfter) } });
+  }
   const body = (await req.json().catch(() => ({}))) as {
     tenantId?: string;
     name?: string;
@@ -20,8 +31,8 @@ export async function POST(req: NextRequest) {
   if (!tenantId) {
     // Bootstrap: solo si el tenant NO tiene keys aún.
     const bootstrapOk =
-      process.env.BOOTSTRAP_SECRET &&
-      req.headers.get("x-bootstrap-secret") === process.env.BOOTSTRAP_SECRET;
+      !!process.env.BOOTSTRAP_SECRET &&
+      secretEquals(req.headers.get("x-bootstrap-secret"), process.env.BOOTSTRAP_SECRET);
     if (!bootstrapOk || !body.tenantId) {
       return json({ error: "unauthorized" }, { status: 401 });
     }

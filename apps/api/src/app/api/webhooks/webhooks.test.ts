@@ -31,6 +31,11 @@ const call = (provider = "uala", body = {}) =>
   POST(req(`http://localhost:4500/api/webhooks/${provider}`, { method: "POST", body }),
     { params: Promise.resolve({ provider }) });
 
+vi.mock("@/lib/ratelimit", () => ({
+  rateLimit: vi.fn(async () => ({ ok: true })),
+  rateLimitKey: vi.fn(() => "test-key"),
+}));
+
 describe("POST /api/webhooks/[provider]", () => {
   beforeEach(() => {
     vi.clearAllMocks();

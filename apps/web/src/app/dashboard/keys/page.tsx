@@ -13,18 +13,14 @@ import {
 } from "@/components/ds";
 import { prisma } from "@plata-neta/db";
 import { auth } from "@/auth";
-import { createApiKey, revokeApiKey } from "../actions/keys";
+import { revokeApiKey } from "../actions/keys";
+import { CreateKeyForm } from "@/components/create-key-form";
 
 const PROVIDERS = Object.entries(PROVIDER_LABEL).map(([id, label]) => ({ id, label }));
 
-export default async function KeysPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ created?: string }>;
-}) {
+export default async function KeysPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
-  const { created } = await searchParams;
 
   const [keys, credentials] = await Promise.all([
     prisma.apiKey.findMany({
@@ -45,18 +41,6 @@ export default async function KeysPage({
         description="Claves para integrar la API y credenciales de tus billeteras conectadas."
       />
 
-      {created && (
-        <Panel className="border-emerald-300 bg-emerald-50/60">
-          <PanelBody>
-            <p className="text-sm font-semibold text-emerald-800">
-              Guardá esta clave — solo se muestra una vez:
-            </p>
-            <code className="mt-2 block break-all rounded-xl border border-emerald-200 bg-white px-3 py-2 font-mono text-sm">
-              {created}
-            </code>
-          </PanelBody>
-        </Panel>
-      )}
 
       <Panel>
         <PanelHeader
@@ -64,13 +48,7 @@ export default async function KeysPage({
           description="Usalas en Authorization: Bearer <key>"
         />
         <PanelBody className="space-y-4">
-          <form action={createApiKey} className="flex items-end gap-3">
-            <div className="flex flex-1 flex-col gap-1.5">
-              <Label htmlFor="name">Nombre</Label>
-              <Input id="name" name="name" placeholder="producción, staging…" required />
-            </div>
-            <Button type="submit" size="sm" className={BTN_PRIMARY}>Crear key</Button>
-          </form>
+          <CreateKeyForm />
           <table className="w-full text-sm">
             <thead>
               <tr className={TABLE_HEAD}>

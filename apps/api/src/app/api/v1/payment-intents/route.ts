@@ -166,7 +166,8 @@ export async function POST(req: NextRequest) {
       where: { id: intent.id },
       data: { status: "FAILED" },
     });
-    const message = err instanceof Error ? err.message : "provider error";
-    return json({ error: message, intentId: intent.id }, { status: 502 });
+    // SEC-2: no eco del body upstream (readback/leak). Log server-side.
+    console.error("[payment-intents] provider error:", err instanceof Error ? err.message : err);
+    return json({ error: "provider error", intentId: intent.id }, { status: 502 });
   }
 }

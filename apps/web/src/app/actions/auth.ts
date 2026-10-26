@@ -50,7 +50,20 @@ export async function register(formData: FormData): Promise<void> {
   redirect("/login?registered=1");
 }
 
+// AUTH-7: throttle simple por email — 5 intentos/min (in-memory, best-effort).
+const attempts = new Map<string, number[]>();
+function throttled(key: string): boolean {
+  const now = Date.now();
+  const list = (attempts.get(key) ?? []).filter((t) => now - t < 60_000);
+  if (list.length >= 5) return true;
+  list.push(now);
+  attempts.set(key, list);
+  return false;
+}
+
 export async function login(formData: FormData): Promise<void> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (email && throttled(email)) redirect("/login?error=rate-limited");
   try {
     await signIn("credentials", {
       email: formData.get("email"),

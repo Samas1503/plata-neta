@@ -40,6 +40,11 @@ export function verifyMercadoPagoSignature(
   const v1 = parts["v1"];
   const dataId = extractDataId(rawBody);
   if (!ts || !v1 || !dataId) return false;
+  // SEC-5: replay window — firmas viejas no valen (±5 min).
+  const tsNum = Number(ts);
+  // MP envía ts en segundos (10 dígitos); aceptar ms también.
+  const tsMs = tsNum < 1e12 ? tsNum * 1000 : tsNum;
+  if (!Number.isFinite(tsNum) || Math.abs(Date.now() - tsMs) > 5 * 60_000) return false;
 
   const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
   const expected = createHmac("sha256", secret).update(manifest).digest("hex");
