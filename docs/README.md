@@ -11,6 +11,7 @@ plata-neta nunca custodia fondos.
 | [ARQUITECTURA.md](ARQUITECTURA.md) | Sistema, capas, modelo de datos, flujos de dinero y ledger |
 | [BILLETERAS.md](BILLETERAS.md) | **Guía de integración por billetera/banco** — los 17 providers, cómo agregar credenciales, cómo cablear cada API real |
 | [API.md](API.md) | Referencia completa de endpoints, auth, errores |
+| [GUIA-E2E.md](GUIA-E2E.md) | **Flujo completo de un cobro 0%** — del registro al dinero en cuenta |
 | [SEGURIDAD.md](SEGURIDAD.md) | Modelo de amenazas, cifrado, webhooks, auditoría, hardening |
 
 ## Quickstart
