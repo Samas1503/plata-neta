@@ -62,7 +62,7 @@ async function main() {
 
   // ===== Datos demo (idempotente por idempotencyKey) =====
   // Credenciales PSP de los 5 providers (blob simbólico — no es secret real).
-  for (const p of ["mercadopago", "uala", "modo"]) {
+  for (const p of ["mercadopago", "uala", "modo", "brubank", "personalpay", "cuentadni"]) {
     await prisma.pspCredential.upsert({
       where: { tenantId_provider: { tenantId: tenant.id, provider: p } },
       update: {},

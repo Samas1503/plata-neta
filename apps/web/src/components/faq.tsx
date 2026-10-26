@@ -13,7 +13,7 @@ const FAQS = [
   },
   {
     q: "¿Qué billeteras y proveedores soporta?",
-    a: "Mercado Pago, MODO, Ualá, Naranja X y Ripio (stablecoins para cobros internacionales). Todos detrás de una sola API y un solo panel.",
+    a: "Mercado Pago, MODO, Ualá, Naranja X, Brubank, Personal Pay, Cuenta DNI, Prex, BNA+, bancos (Galicia, Santander, BBVA, Macro, Nación, Provincia, Credicoop) y Ripio (stablecoins). Todos detrás de una sola API y un solo panel — cobrás por transferencia CVU/CBU/alias al 0%.",
   },
   {
     q: "¿Necesito cuenta propia en cada proveedor?",

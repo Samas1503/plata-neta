@@ -59,6 +59,18 @@ export const PROVIDER_LABEL: Record<string, string> = {
   uala: "Ualá",
   naranjax: "Naranja X",
   ripio: "Ripio",
+  brubank: "Brubank",
+  personalpay: "Personal Pay",
+  cuentadni: "Cuenta DNI",
+  prex: "Prex",
+  bnaplus: "BNA+",
+  galicia: "Galicia",
+  santander: "Santander",
+  bbva: "BBVA",
+  macro: "Macro",
+  bna: "Banco Nación",
+  provincia: "Banco Provincia",
+  credicoop: "Credicoop",
 };
 
 export function Badge({ tone, children }: { tone: string; children: ReactNode }) {

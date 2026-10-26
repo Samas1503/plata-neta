@@ -24,7 +24,7 @@ const tenant = await prisma.tenant.upsert({ where: { slug: "comercio-demo" }, up
 for (const [email, role, name] of [["owner@demo.plata","OWNER","Dueña Demo"],["operator@demo.plata","OPERATOR","Operador Demo"],["viewer@demo.plata","VIEWER","Visor Demo"]]) {
   await prisma.user.upsert({ where: { email }, update: {}, create: { tenantId: tid, email, name, role, passwordHash: hash("demo1234") } });
 }
-for (const prov of ["mercadopago","uala","modo"]) {
+for (const prov of ["mercadopago","uala","modo","brubank","personalpay","cuentadni"]) {
   await prisma.pspCredential.upsert({ where: { tenantId_provider: { tenantId: tid, provider: prov } }, update: {}, create: { tenantId: tid, provider: prov, encryptedKeys: `demo-enc:${prov}` } });
 }
 const intents = [

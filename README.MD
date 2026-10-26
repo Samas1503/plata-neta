@@ -1,8 +1,10 @@
 # plata-neta
 
 SaaS multi-tenant para comercios argentinos: **cobros y pagos directos por
-transferencia** a través de Mercado Pago, MODO, Ualá, Naranja X y stablecoins
-vía Ripio — todo detrás de una sola plataforma.
+transferencia** a través de 17 proveedores — billeteras (Mercado Pago, MODO,
+Ualá, Naranja X, Brubank, Personal Pay, Cuenta DNI, Prex, BNA+), bancos
+(Galicia, Santander, BBVA, Macro, Nación, Provincia, Credicoop) y stablecoins
+vía Ripio — todo al 0% por transferencia CVU/CBU/alias, detrás de una sola plataforma.
 
 **Modelo de negocio:** suscripción mensual por tiers, escalonada según el
 volumen de ventas mensual (GMV) de cada comercio. Sin % por transacción.
@@ -28,7 +30,7 @@ apps/
 packages/
   db/        # Prisma schema, migraciones, seed
   core/      # Money, máquina de estados TxStatus, errores de dominio
-  providers/ # Interfaz PaymentProvider (MP, MODO, Ualá, Naranja X, Ripio)
+  providers/ # PaymentProvider — 17 adaptadores (billeteras + bancos + Ripio)
   jobs/      # Worker BullMQ: webhook.process, intent.expire, reconcile.run,
              # subscription.bill (schedulers incluidos)
 ```

@@ -9,6 +9,20 @@ export const PROVIDER_IDS = [
   "uala",
   "naranjax",
   "ripio",
+  // Billeteras 0% — recepción por transferencia a CVU/alias del comercio
+  "brubank",
+  "personalpay",
+  "cuentadni",
+  "prex",
+  "bnaplus",
+  // Bancos — recepción por transferencia a CBU/alias del comercio
+  "galicia",
+  "santander",
+  "bbva",
+  "macro",
+  "bna",
+  "provincia",
+  "credicoop",
 ] as const;
 
 export type ProviderId = (typeof PROVIDER_IDS)[number];

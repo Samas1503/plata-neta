@@ -4,6 +4,9 @@ import { JOBS } from "./types";
 import { executePayouts, expireIntents, processWebhook, reconcile } from "./processors";
 import { billSubscription } from "./subscription";
 import { upsertSchedulers } from "./queue";
+import { registerAllProviders } from "@plata-neta/providers";
+
+registerAllProviders();
 
 const worker = new Worker(
   "plata-neta",

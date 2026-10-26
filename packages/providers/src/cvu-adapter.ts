@@ -34,7 +34,8 @@ export function createCvuAdapter(cfg: CvuConfig): PaymentProvider {
 
     async createIntent(input: CreateIntentInput, credentials: ProviderCredentials): Promise<PaymentIntentResult> {
       // Instrucción de cobro con CVU/alias del propio comercio.
-      const cvu = credentials.extra?.["cvu"];
+      const cvu = credentials.extra?.["cvu"] ?? credentials.extra?.["cbu"];
+      const cbu = credentials.extra?.["cbu"];
       const alias = credentials.extra?.["alias"];
       const qrPayload = credentials.extra?.["qrPayload"];
       const ref = `${cfg.id.slice(0, 4)}-${input.idempotencyKey}`;
@@ -43,6 +44,7 @@ export function createCvuAdapter(cfg: CvuConfig): PaymentProvider {
         status: "PENDING",
         paymentDetails: {
           cvu,
+          cbu,
           alias,
           qrCode: qrPayload,
           amount: (Number(input.amountCents) / 100).toFixed(2),

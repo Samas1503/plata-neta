@@ -1,22 +1,11 @@
-import {
-  mercadoPagoProvider,
-  modoProvider,
-  naranjaxProvider,
-  registerProvider,
-  ripioProvider,
-  ualaProvider,
-} from "@plata-neta/providers";
+import { registerAllProviders } from "@plata-neta/providers";
 import type { ProviderCredentials } from "@plata-neta/providers";
 
 let registered = false;
 
 export function ensureProvidersRegistered(): void {
   if (!registered) {
-    registerProvider(mercadoPagoProvider);
-    registerProvider(ualaProvider);
-    registerProvider(naranjaxProvider);
-    registerProvider(modoProvider);
-    registerProvider(ripioProvider);
+    registerAllProviders();
     registered = true;
   }
 }
