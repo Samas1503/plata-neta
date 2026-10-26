@@ -41,8 +41,9 @@ hoy al 0%), falta cablear `getStatus`/webhook contra la API real.
      "currency": "ARS", "reference": "brub-abc123" }
    ```
    El cliente transfiere directo al CVU/alias del comercio → **0% comisión**.
-4. La confirmación llega por webhook (donde exista) o se concilia por
-   `intent.expire`/reconciliación.
+4. La confirmación llega por webhook (donde exista), o **manual**
+   (botón Confirmar en Cobros), o **por extracto** (Conciliación →
+   importar CSV de movimientos → matching automático).
 
 ### API equivalente
 

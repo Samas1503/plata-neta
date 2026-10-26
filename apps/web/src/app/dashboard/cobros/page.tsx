@@ -16,6 +16,7 @@ import {
 } from "@/components/ds";
 import { prisma } from "@plata-neta/db";
 import { auth } from "@/auth";
+import { confirmCobro } from "../actions/cobros";
 
 const PILL = "rounded-full px-3.5 py-1.5 text-sm transition-colors";
 const PILL_ON = `${PILL} bg-emerald-500/10 font-medium text-emerald-700`;
@@ -104,9 +105,18 @@ export default async function CobrosPage({
                       </Badge>
                     </td>
                     <td className="py-3 pr-6 text-right">
-                      <Link href={`/dashboard/cobros/${i.id}`} className="text-xs font-semibold text-emerald-600 hover:underline">
-                        Detalle
-                      </Link>
+                      <span className="inline-flex items-center gap-3">
+                        {["PENDING", "PROCESSING"].includes(i.status) && ["OWNER", "OPERATOR"].includes(session.user.role) && (
+                          <form action={confirmCobro.bind(null, i.id)}>
+                            <button type="submit" className="text-xs font-semibold text-sky-600 hover:underline">
+                              Confirmar
+                            </button>
+                          </form>
+                        )}
+                        <Link href={`/dashboard/cobros/${i.id}`} className="text-xs font-semibold text-emerald-600 hover:underline">
+                          Detalle
+                        </Link>
+                      </span>
                     </td>
                   </tr>
                 ))}

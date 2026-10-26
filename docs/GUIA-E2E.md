@@ -162,6 +162,21 @@ Dos vías:
   lo actualizan cuando el PSP reporte, o el comercio lo marca cuando vea
   la transferencia en su app.
 
+#### Sin API/webhook (la mayoría de providers)
+
+Dos mecanismos que funcionan hoy:
+
+1. **Confirmación manual** — en Cobros, botón **Confirmar** en cualquier
+   intent PENDING/PROCESSING. El comercio ve la plata en su app y lo
+   marca → `SUCCEEDED` + ledger + `cobro.confirm_manual` en auditoría.
+
+2. **Importar extracto** — Conciliación → subir el CSV de movimientos
+   (columnas `fecha,monto,referencia` o equivalentes). El sistema
+   matchea cada fila contra intents PENDING/PROCESSING por monto exacto
+   (±$0,01) y referencia contenida → confirma los match, reporta
+   `matched / sin match / ambiguos`. Fila ambigua nunca confirma
+   el cobro equivocado.
+
 El ledger siempre cuadra:
 - PENDING → `pending +monto` / `clearing -monto`
 - SUCCEEDED → `available +monto` / `pending -monto`
