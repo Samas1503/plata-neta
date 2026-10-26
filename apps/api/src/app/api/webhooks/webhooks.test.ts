@@ -17,7 +17,8 @@ vi.mock("@plata-neta/db", () => ({
 }));
 vi.mock("@plata-neta/providers", () => ({
   isProviderId: (p: string) => p === "uala",
-  getProvider: () => ({ verifySignature: m.verifySig, parseWebhook: m.parseWh }),
+  registerAllProviders: vi.fn(),
+    getProvider: () => ({ verifySignature: m.verifySig, parseWebhook: m.parseWh }),
 }));
 vi.mock("@plata-neta/jobs", () => ({
   enqueue: m.enqueue,

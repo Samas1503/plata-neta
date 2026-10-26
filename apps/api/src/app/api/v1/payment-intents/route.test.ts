@@ -47,7 +47,8 @@ vi.mock("@plata-neta/providers", () => ({
   naranjaxProvider: { id: "naranjax" },
   modoProvider: { id: "modo" },
   ripioProvider: { id: "ripio" },
-  registerProvider: vi.fn(),
+  registerAllProviders: vi.fn(),
+    registerProvider: vi.fn(),
 }));
 
 import { GET, POST } from "./route";
